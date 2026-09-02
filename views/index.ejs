@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Live Marker Map</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body, html { height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    #map { height: 100%; width: 100%; z-index: 1; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    #sidebar.open { display: flex !important; }
+
+    .controls-wrap {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      width: 92%; max-width: 480px;
+    }
+    .controls {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+      background: rgba(255,255,255,0.92); padding: 10px 14px; border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15); backdrop-filter: blur(5px); width: 100%;
+    }
+    button.action-btn {
+      padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      border: none; border-radius: 8px; transition: all 0.15s ease; color: #fff;
+    }
+    button.action-btn:active { transform: translateY(1px); }
+    .btn-mark   { background: #3b82f6; box-shadow: 0 4px 6px rgba(59,130,246,0.3); }
+    .btn-mark:active   { background: #2563eb; }
+    .btn-export { background: #10b981; box-shadow: 0 4px 6px rgba(16,185,129,0.3); }
+    .btn-export:active { background: #059669; }
+    .btn-import { background: #8b5cf6; box-shadow: 0 4px 6px rgba(139,92,246,0.3); }
+    .btn-import:active { background: #7c3aed; }
+
+    .autocenter-pill {
+      display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.92);
+      padding: 6px 12px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+      font-size: 12px; font-weight: 600; color: #374151; backdrop-filter: blur(5px);
+    }
+    .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute; cursor: pointer; inset: 0; background-color: #d1d5db;
+      transition: 0.2s; border-radius: 999px;
+    }
+    .switch .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px;
+      background-color: #fff; transition: 0.2s; border-radius: 50%;
+    }
+    .switch input:checked + .slider { background-color: #3b82f6; }
+    .switch input:checked + .slider:before { transform: translateX(16px); }
+
+    .recenter-btn {
+      position: absolute; top: 12px; right: 12px; z-index: 1100; background: #fff;
+      border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; border: none;
+    }
+
+    .popup-control-group { margin-top: 6px; margin-bottom: 6px; text-align: left; }
+    .popup-control-group label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 3px; color: #374151; }
+    .condition-select, .lux-input {
+      width: 100%; padding: 5px; border-radius: 4px; border: 1px solid #d1d5db; font-size: 12px; outline: none;
+    }
+    .done-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: #374151; font-weight: 600; }
+    .photo-row { display: flex; gap: 6px; margin-top: 6px; }
+    .popup-thumb {
+      width: 46px; height: 46px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; cursor: pointer;
+    }
+    .photo-btn-row { display: flex; gap: 6px; margin-top: 8px; }
+    .photo-btn {
+      flex: 1; font-size: 11px; font-weight: 600; padding: 6px 4px; border-radius: 4px; border: 1px solid #d1d5db;
+      background: #f9fafb; color: #374151; cursor: pointer;
+    }
+    .photo-btn:hover { background: #f3f4f6; }
+    .delete-btn {
+      display: block; width: 100%; margin-top: 8px; padding: 6px 10px; background: #ef4444;
+      color: #fff; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;
+    }
+    .delete-btn:hover { background: #dc2626; }
+    .done-badge {
+      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #dcfce7; color: #166534;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000;
+      display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 82%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin-top: 0; color: #1f2937; }
+    .modal-content p { color: #4b5563; margin-bottom: 18px; font-size: 14px; }
+    .modal-content button { background: #3b82f6; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+
+    .dist-tooltip {
+      background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 6px; padding: 3px 7px; font-size: 11px; font-weight: 700; color: #1f2937; white-space: nowrap;
+    }
+    .leaflet-tooltip-top:before { border-top-color: rgba(255,255,255,0.95); }
+
+    .sidebar-toggle {
+      position: absolute; top: 12px; left: 12px; z-index: 1100; background: #fff;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 8px 10px; cursor: pointer;
+    }
+    @media (min-width: 768px) { .sidebar-toggle { display: none; } }
+  </style>
+</head>
+
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <div id="sidebar" class="hidden md:flex w-full md:w-1/3 lg:w-1/4 h-full bg-white shadow-xl flex-col z-10 absolute md:relative inset-0">
+    <div class="p-5 border-b border-gray-100 bg-blue-600 text-white shadow-sm flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold leading-tight">Peta Penerangan</h1>
+        <p class="text-sm text-blue-100 mt-1">Live · Kolaboratif</p>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+        <span id="connLabel" class="text-blue-100">Menghubungkan…</span>
+      </div>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-b border-gray-200">
+      <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Legenda</h2>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full bg-red-500 border border-red-700 shadow-sm"></span>
+          <span class="text-sm font-medium text-gray-700">Gelap</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full bg-yellow-500 border border-yellow-700 shadow-sm"></span>
+          <span class="text-sm font-medium text-gray-700">Redup</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full bg-green-500 border border-green-700 shadow-sm"></span>
+          <span class="text-sm font-medium text-gray-700">Terang</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-auto bg-white p-4">
+      <h2 class="text-sm font-semibold text-gray-700 mb-3 sticky top-0 bg-white py-1">Daftar Titik Lokasi</h2>
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-2 text-left font-medium text-gray-500">ID</th>
+              <th class="px-3 py-2 text-left font-medium text-gray-500">Kondisi</th>
+              <th class="px-3 py-2 text-center font-medium text-gray-500">Selesai</th>
+              <th class="px-3 py-2 text-center font-medium text-gray-500">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody" class="divide-y divide-gray-200 bg-white"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="p-3 border-t border-gray-200 bg-gray-50 text-xs text-center text-gray-500">
+      Data tersinkron secara realtime lewat Socket.io
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div class="flex-1 h-full relative">
+    <div class="sidebar-toggle" id="sidebarToggle">
+      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </div>
+    <button id="recenterBtn" class="recenter-btn" title="Pusatkan ke lokasi saya">🎯</button>
+    <div id="map"></div>
+
+    <div class="controls-wrap">
+      <div class="autocenter-pill">
+        <label class="switch">
+          <input type="checkbox" id="autoCenterToggle" checked>
+          <span class="slider"></span>
+        </label>
+        <span>Auto-center GPS</span>
+      </div>
+      <div class="controls">
+        <button id="markBtn" class="action-btn btn-mark">Mark Point</button>
+        <button id="exportBtn" class="action-btn btn-export">Export CSV</button>
+        <button id="importBtn" class="action-btn btn-import">Import CSV</button>
+        <input type="file" id="csvInput" accept=".csv" style="display:none;" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="alertModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="modalTitle">Notice</h3>
+      <p id="modalMessage">Message here</p>
+      <button onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Modal helpers ----------
+    const modal = document.getElementById('alertModal');
+    function showModal(title, message) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalMessage').innerText = message;
+      modal.classList.add('active');
+    }
+    function closeModal() { modal.classList.remove('active'); }
+
+    // ---------- Sidebar toggle (mobile) ----------
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('sidebarToggle').onclick = () => sidebar.classList.toggle('open');
+
+    // ---------- Auto-center GPS toggle ----------
+    let autoCenter = localStorage.getItem('autoCenterGps') !== 'false'; // default ON
+    const autoCenterToggle = document.getElementById('autoCenterToggle');
+    autoCenterToggle.checked = autoCenter;
+    autoCenterToggle.onchange = (e) => {
+      autoCenter = e.target.checked;
+      localStorage.setItem('autoCenterGps', autoCenter);
+    };
+    document.getElementById('recenterBtn').onclick = () => {
+      if (currentPos) map.flyTo(currentPos, 18, { duration: 1 });
+      else showModal('Tunggu', 'Masih mencari sinyal GPS…');
+    };
+
+    // ---------- Map setup ----------
+    const map = L.map('map', { maxZoom: 24, zoomControl: false }).setView([-7.2575, 112.7521], 15);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 24, maxNativeZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let currentPos = null;
+    let liveMarker = null;
+    const markersLayer = L.layerGroup().addTo(map);
+    const activeMarkers = {}; // id -> { marker, data }
+    let firstLocate = true;
+
+    // ---------- Styling ----------
+    const styles = {
+      Gelap:  { color: '#ef4444', border: '#b91c1c', badge: 'bg-red-100 text-red-800' },
+      Redup:  { color: '#eab308', border: '#a16207', badge: 'bg-yellow-100 text-yellow-800' },
+      Terang: { color: '#22c55e', border: '#15803d', badge: 'bg-green-100 text-green-800' },
+    };
+    function iconFor(condition, done) {
+      const s = styles[condition] || styles.Terang;
+      const checkMark = done ? '<circle cx="18" cy="6" r="5" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><path d="M15.7 6l1.4 1.4L20.3 4" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' : '';
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26">
+          <circle cx="12" cy="12" r="10" fill="${s.color}" stroke="${s.border}" stroke-width="2"/>
+          <circle cx="12" cy="12" r="3" fill="rgba(255,255,255,0.8)"/>
+          ${checkMark}
+        </svg>`;
+      return L.divIcon({ html: svg, className: '', iconSize: [26, 26], iconAnchor: [12, 12], popupAnchor: [0, -10] });
+    }
+    function distanceLabel(latlng) {
+      if (!currentPos) return 'Menghitung…';
+      const d = currentPos.distanceTo(latlng);
+      return d < 1000 ? `${Math.round(d)} m` : `${(d / 1000).toFixed(2)} km`;
+    }
+    function formatDate(d) {
+      if (!d) return '';
+      const dt = new Date(d);
+      return isNaN(dt) ? d : dt.toLocaleDateString();
+    }
+
+    // ---------- Image compression ----------
+    function compressImage(file, maxWidth = 640, quality = 0.6) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxWidth / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ---------- Popup ----------
+    function buildPopup(data) {
+      const div = document.createElement('div');
+      div.className = 'font-sans w-56';
+      const doneBadge = data.done ? '<span class="done-badge">Selesai</span>' : '';
+      const photoThumb = data.photo ? `<img src="${data.photo}" class="popup-thumb" title="Foto" onclick="window.open('${data.photo}','_blank')">` : '';
+      const photo360Thumb = data.photo_360 ? `<img src="${data.photo_360}" class="popup-thumb" title="Foto 360°" onclick="window.open('${data.photo_360}','_blank')">` : '';
+
+      div.innerHTML = `
+        <div class="font-bold text-sm mb-1 border-b pb-1 text-gray-800 flex items-center justify-between">
+          <span>Titik #${data.id}</span>${doneBadge}
+        </div>
+        <div class="text-xs text-gray-500 mb-2 truncate" title="${data.name || ''}">${data.name || ''} ${data.date ? '· ' + formatDate(data.date) : ''}</div>
+        <div class="photo-row">${photoThumb}${photo360Thumb}</div>
+        <div class="popup-control-group">
+          <label>Kondisi</label>
+          <select class="condition-select">
+            <option value="Gelap" ${data.condition === 'Gelap' ? 'selected' : ''}>Gelap</option>
+            <option value="Redup" ${data.condition === 'Redup' ? 'selected' : ''}>Redup</option>
+            <option value="Terang" ${data.condition === 'Terang' ? 'selected' : ''}>Terang</option>
+          </select>
+        </div>
+        <div class="popup-control-group">
+          <label>Lux</label>
+          <input type="number" step="0.1" class="lux-input" value="${data.lux ?? 0}">
+        </div>
+        <div class="done-row">
+          <input type="checkbox" class="done-check" ${data.done ? 'checked' : ''}>
+          <label>Sudah ditinjau</label>
+        </div>
+        <div class="photo-btn-row">
+          <button class="photo-btn upload-photo-btn">📷 Foto</button>
+          <button class="photo-btn upload-360-btn">🌐 360°</button>
+        </div>
+        <div class="text-[10px] text-gray-400 font-mono bg-gray-50 p-1 rounded mt-2 border border-gray-100 text-center">
+          ${Number(data.latitude).toFixed(6)}, ${Number(data.longitude).toFixed(6)}
+        </div>
+        <button class="delete-btn">Hapus Titik</button>
+        <input type="file" class="photo-file-input" accept="image/*" capture="environment" style="display:none">
+        <input type="file" class="photo360-file-input" accept="image/*" style="display:none">
+      `;
+
+      div.querySelector('.condition-select').onchange = (e) => updateMarker(data.id, { ...data, condition: e.target.value });
+      div.querySelector('.lux-input').onchange = (e) => updateMarker(data.id, { ...data, lux: parseFloat(e.target.value) || 0 });
+      div.querySelector('.done-check').onchange = (e) => updateMarker(data.id, { ...data, done: e.target.checked ? 1 : 0 });
+      div.querySelector('.delete-btn').onclick = () => deleteMarker(data.id);
+
+      const photoInput = div.querySelector('.photo-file-input');
+      div.querySelector('.upload-photo-btn').onclick = () => photoInput.click();
+      photoInput.onchange = async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        try { const dataUrl = await compressImage(file); await updateMarker(data.id, { ...data, photo: dataUrl }); }
+        catch { showModal('Error', 'Gagal memproses foto.'); }
+      };
+
+      const photo360Input = div.querySelector('.photo360-file-input');
+      div.querySelector('.upload-360-btn').onclick = () => photo360Input.click();
+      photo360Input.onchange = async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        try { const dataUrl = await compressImage(file, 960, 0.55); await updateMarker(data.id, { ...data, photo_360: dataUrl }); }
+        catch { showModal('Error', 'Gagal memproses foto 360°.'); }
+      };
+
+      return div;
+    }
+
+    // ---------- Sidebar row helpers ----------
+    const tableBody = document.getElementById('dataTableBody');
+    function renderRow(data) {
+      const s = styles[data.condition] || styles.Terang;
+      const tr = document.createElement('tr');
+      tr.dataset.id = data.id;
+      tr.className = 'hover:bg-blue-50 transition-colors';
+      tr.innerHTML = `
+        <td class="px-3 py-2 whitespace-nowrap"><div class="font-medium text-gray-900">#${data.id}</div></td>
+        <td class="px-3 py-2 whitespace-nowrap">
+          <span class="row-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.badge}">${data.condition}</span>
+        </td>
+        <td class="px-3 py-2 whitespace-nowrap text-center">
+          <input type="checkbox" class="row-done" ${data.done ? 'checked' : ''}>
+        </td>
+        <td class="px-3 py-2 whitespace-nowrap text-center">
+          <button class="view-btn text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-xs font-medium transition-colors">Lihat</button>
+        </td>`;
+      tr.querySelector('.view-btn').onclick = () => focusMarker(data.id);
+      tr.querySelector('.row-done').onchange = (e) => {
+        const entry = activeMarkers[data.id];
+        if (entry) updateMarker(data.id, { ...entry.data, done: e.target.checked ? 1 : 0 });
+      };
+      tableBody.appendChild(tr);
+    }
+    function updateRow(data) {
+      const tr = tableBody.querySelector(`tr[data-id="${data.id}"]`);
+      if (!tr) return;
+      const s = styles[data.condition] || styles.Terang;
+      const badge = tr.querySelector('.row-badge');
+      badge.className = `row-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.badge}`;
+      badge.innerText = data.condition;
+      tr.querySelector('.row-done').checked = !!data.done;
+    }
+    function removeRow(id) {
+      const tr = tableBody.querySelector(`tr[data-id="${id}"]`);
+      if (tr) tr.remove();
+    }
+
+    // ---------- Map marker helpers ----------
+    function addMarkerToMap(data) {
+      if (activeMarkers[data.id]) return; // already present
+      const latlng = [Number(data.latitude), Number(data.longitude)];
+      const marker = L.marker(latlng, { icon: iconFor(data.condition, data.done) })
+        .bindTooltip(`Jarak: ${distanceLabel(L.latLng(latlng))}`, { permanent: true, direction: 'top', className: 'dist-tooltip', offset: [0, -14] })
+        .bindPopup(buildPopup(data), { maxWidth: 240 });
+      markersLayer.addLayer(marker);
+      activeMarkers[data.id] = { marker, data };
+      renderRow(data);
+    }
+    function updateMarkerOnMap(data) {
+      const entry = activeMarkers[data.id];
+      if (!entry) return addMarkerToMap(data);
+      entry.data = data;
+      entry.marker.setIcon(iconFor(data.condition, data.done));
+      entry.marker.setPopupContent(buildPopup(data));
+      updateRow(data);
+    }
+    function removeMarkerFromMap(id) {
+      const entry = activeMarkers[id];
+      if (!entry) return;
+      markersLayer.removeLayer(entry.marker);
+      delete activeMarkers[id];
+      removeRow(id);
+    }
+    window.focusMarker = function (id) {
+      const entry = activeMarkers[id];
+      if (!entry) return;
+      const latlng = entry.marker.getLatLng();
+      sidebar.classList.remove('open');
+      map.flyTo(latlng, 19, { duration: 1.2 });
+      setTimeout(() => entry.marker.openPopup(), 1200);
+    };
+
+    // ---------- REST API ----------
+    async function apiRequest(url, options) {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+      return res.json();
+    }
+    async function loadMarkers() {
+      try {
+        const rows = await apiRequest('/marker');
+        rows.forEach(addMarkerToMap);
+        if (rows.length) {
+          const group = new L.featureGroup(Object.values(activeMarkers).map(e => e.marker));
+          map.fitBounds(group.getBounds(), { padding: [50, 50] });
+        }
+      } catch (err) {
+        showModal('Error', 'Gagal memuat data marker: ' + err.message);
+      }
+    }
+    async function createMarker(payload) {
+      try {
+        const data = await apiRequest('/marker', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        socket.emit('marker.add', data);
+      } catch (err) { showModal('Error', 'Gagal menambah titik: ' + err.message); }
+    }
+    async function updateMarker(id, payload) {
+      try {
+        const data = await apiRequest(`/marker/${id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        socket.emit('marker.update', data);
+      } catch (err) { showModal('Error', 'Gagal memperbarui titik: ' + err.message); }
+    }
+    async function deleteMarker(id) {
+      try {
+        await apiRequest(`/marker/${id}`, { method: 'DELETE' });
+        socket.emit('marker.remove', { id });
+      } catch (err) { showModal('Error', 'Gagal menghapus titik: ' + err.message); }
+    }
+
+    // ---------- Socket.io (co-op sync) ----------
+    const socket = io();
+    const connDot = document.getElementById('connDot');
+    const connLabel = document.getElementById('connLabel');
+    socket.on('connect', () => { connDot.className = 'w-2.5 h-2.5 rounded-full bg-green-400'; connLabel.innerText = 'Terhubung'; });
+    socket.on('disconnect', () => { connDot.className = 'w-2.5 h-2.5 rounded-full bg-red-400'; connLabel.innerText = 'Terputus'; });
+    socket.on('marker.add', addMarkerToMap);
+    socket.on('marker.update', updateMarkerOnMap);
+    socket.on('marker.remove', (payload) => removeMarkerFromMap(payload.id));
+
+    // ---------- GPS live tracking ----------
+    map.locate({ setView: false, maxZoom: 19, watch: true, enableHighAccuracy: true });
+
+    map.on('locationfound', (e) => {
+      currentPos = e.latlng;
+      if (liveMarker) {
+        liveMarker.setLatLng(currentPos);
+      } else {
+        liveMarker = L.circleMarker(currentPos, { color: '#ffffff', weight: 2, fillColor: '#3b82f6', radius: 8, fillOpacity: 1 }).addTo(map);
+      }
+
+      if (firstLocate && autoCenter) { map.setView(currentPos, 17); }
+      else if (autoCenter) { map.panTo(currentPos); }
+      firstLocate = false;
+
+      Object.values(activeMarkers).forEach(({ marker }) => {
+        marker.setTooltipContent(`Jarak: ${distanceLabel(marker.getLatLng())}`);
+      });
+    });
+
+    map.on('locationerror', (e) => {
+      showModal('Location Error', 'Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
+      console.warn('Location error:', e.message);
+    });
+
+    // ---------- Controls ----------
+    document.getElementById('markBtn').onclick = async () => {
+      if (!currentPos) { showModal('Tunggu', 'Masih mencari sinyal GPS…'); return; }
+      const btn = document.getElementById('markBtn');
+      const original = btn.innerText;
+      await createMarker({
+        name: new Date().toLocaleString(),
+        latitude: currentPos.lat,
+        longitude: currentPos.lng,
+        condition: 'Terang',
+        lux: 0,
+        photo: '',
+        photo_360: ''
+      });
+      btn.innerText = 'Saved!';
+      setTimeout(() => { btn.innerText = original; }, 1200);
+    };
+
+    document.getElementById('exportBtn').onclick = () => {
+      const rows = Object.values(activeMarkers).map(e => e.data);
+      if (!rows.length) { showModal('Empty', 'Belum ada titik untuk diekspor.'); return; }
+      let csv = 'ID,Name,Latitude,Longitude,Condition,Lux,Done,Date\n';
+      rows.forEach(p => {
+        csv += `${p.id},"${(p.name || '').replace(/"/g, '""')}",${p.latitude},${p.longitude},${p.condition},${p.lux ?? 0},${p.done ? 1 : 0},${p.date || ''}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `markers_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('importBtn').onclick = () => document.getElementById('csvInput').click();
+
+    document.getElementById('csvInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const text = event.target.result;
+          const lines = text.trim().split('\n');
+          if (lines.length < 2) { showModal('Error', 'File CSV kosong atau tidak valid.'); return; }
+
+          let imported = 0;
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            if (cols.length < 4) continue;
+            const name = (cols[1] || '').replace(/^"|"$/g, '').trim();
+            const latitude = parseFloat(cols[2]);
+            const longitude = parseFloat(cols[3]);
+            const condition = cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : 'Terang';
+            const lux = cols[5] ? parseFloat(cols[5]) : 0;
+            const done = cols[6] ? (cols[6].trim() === '1' ? 1 : 0) : 0;
+            if (isNaN(latitude) || isNaN(longitude)) continue;
+            await createMarker({ name, latitude, longitude, condition, lux: isNaN(lux) ? 0 : lux, done, photo: '', photo_360: '' });
+            imported++;
+          }
+          imported > 0
+            ? showModal('Success', `Berhasil mengimpor ${imported} titik!`)
+            : showModal('Warning', 'Tidak ada koordinat valid ditemukan di CSV.');
+        } catch (err) {
+          console.error(err);
+          showModal('Error', 'Gagal membaca file CSV.');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    };
+
+    // ---------- Init ----------
+    loadMarkers();
+  </script>
+</body>
+</html>
