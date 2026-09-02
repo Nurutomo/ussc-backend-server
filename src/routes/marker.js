@@ -1,44 +1,134 @@
 import { Router } from 'express'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { pool } from '../lib/database.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const publicDir = path.resolve(__dirname, '../../public')
+const imgDir = path.join(publicDir, 'img')
 
 const router = Router()
 
+async function ensureImageDirectory() {
+  await fs.mkdir(imgDir, { recursive: true })
+}
 
-router.get('/', async (req, res) => {
-    // Handle fetching marker
-    const [rows] = await pool.query('SELECT * FROM marker')
+async function saveImageToDisk(imageValue, fieldName) {
+  if (!imageValue || typeof imageValue !== 'string') return ''
+
+  if (imageValue.startsWith('data:image/')) {
+    const match = imageValue.match(/^data:image\/([a-zA-Z0-9.+-]+);base64,(.+)$/)
+    if (!match) return imageValue
+
+    const [, mimeType, base64Data] = match
+    const extension = mimeType === 'jpeg' ? 'jpg' : mimeType === 'svg+xml' ? 'svg' : mimeType
+    const filename = `${fieldName}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`
+
+    await ensureImageDirectory()
+    await fs.writeFile(path.join(imgDir, filename), Buffer.from(base64Data, 'base64'))
+    return `/img/${filename}`
+  }
+
+  return imageValue
+}
+
+router.get('/', async (req, res, next) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM marker ORDER BY id ASC')
     res.json(rows)
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.get('/:id', async (req, res) => {
-    // Handle fetching a specific marker
+router.get('/:id', async (req, res, next) => {
+  try {
     const { id } = req.params
     const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
-    res.json(rows)
+    if (!rows.length) return res.status(404).json({ error: 'Marker not found' })
+    res.json(rows[0])
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.post('/', async (req, res) => {
-    // Handle adding a marker
-    const { name, latitude, longitude } = req.body
-    const [result] = await pool.query('INSERT INTO marker (name, latitude, longitude) VALUES (?, ?, ?)', [name, latitude, longitude])
-    res.json({ id: result.insertId, name, latitude, longitude })
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, latitude, longitude, condition, lux, photo, photo_360, date } = req.body
+
+    if (latitude == null || longitude == null) {
+      return res.status(400).json({ error: 'latitude and longitude are required' })
+    }
+
+    const finalName = name || `Titik ${new Date().toLocaleString()}`
+    const finalCondition = condition || 'Terang'
+    const finalLux = lux != null ? lux : 0
+    const finalPhoto = await saveImageToDisk(photo, 'photo')
+    const finalPhoto360 = await saveImageToDisk(photo_360, 'photo_360')
+    const finalDate = new Date(date || Date.now())
+
+    const [result] = await pool.query(
+      `INSERT INTO marker (name, latitude, longitude, \`condition\`, lux, photo, photo_360, date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [finalName, latitude, longitude, finalCondition, finalLux, finalPhoto, finalPhoto360, finalDate]
+    )
+
+    console.log(result)
+
+    const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [result.insertId])
+    res.status(201).json(rows[0])
+  } catch (err) {
+    next(err)
+  }
 })
-router.put('/:id', async (req, res) => {
-    // Handle updating a marker
+
+router.put('/:id', async (req, res, next) => {
+  try {
     const { id } = req.params
-    const { name, latitude, longitude } = req.body
-    await pool.query('UPDATE marker SET name = ?, latitude = ?, longitude = ? WHERE id = ?', [name, latitude, longitude, id])
-    res.json({ id, name, latitude, longitude })
+    const { name, latitude, longitude, condition, lux, photo, photo_360, done } = req.body
+
+    const [existing] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
+    if (!existing.length) return res.status(404).json({ error: 'Marker not found' })
+    const current = existing[0]
+
+    const merged = {
+      name: name !== undefined ? name : current.name,
+      latitude: latitude !== undefined ? latitude : current.latitude,
+      longitude: longitude !== undefined ? longitude : current.longitude,
+      condition: condition !== undefined ? condition : current.condition,
+      lux: lux !== undefined ? lux : current.lux,
+      photo: photo !== undefined ? await saveImageToDisk(photo, 'photo') : current.photo,
+      photo_360: photo_360 !== undefined ? await saveImageToDisk(photo_360, 'photo_360') : current.photo_360,
+      done: done !== undefined ? done : current.done,
+    }
+
+    await pool.query(
+      `UPDATE marker
+       SET name = ?, latitude = ?, longitude = ?, \`condition\` = ?, lux = ?, photo = ?, photo_360 = ?, done = ?
+       WHERE id = ?`,
+      [merged.name, merged.latitude, merged.longitude, merged.condition, merged.lux, merged.photo, merged.photo_360, merged.done, id]
+    )
+
+    const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
+    res.json(rows[0])
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.delete('/:id', async (req, res) => {
-    // Handle removing a marker
+router.delete('/:id', async (req, res, next) => {
+  try {
     const { id } = req.params
     await pool.query('DELETE FROM marker WHERE id = ?', [id])
-    res.json({ message: 'Marker removed' })
+    res.json({ message: 'Marker removed', id: Number(id) })
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.use(async (err, req, res, next) => {
+router.use((err, req, res, next) => {
   // Middleware to handle errors and set response headers
   const statusCode = err.status || 500
   res.setHeader('Content-Type', 'application/json')

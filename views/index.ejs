@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -11,115 +12,501 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    body, html { height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    #map { height: 100%; width: 100%; z-index: 1; }
+    body,
+    html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    #map {
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+    }
 
-    #sidebar.open { display: flex !important; }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    #sidebar.open {
+      display: flex !important;
+    }
 
     .controls-wrap {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px;
-      width: 92%; max-width: 480px;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 92%;
+      max-width: 480px;
     }
+
     .controls {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-      background: rgba(255,255,255,0.92); padding: 10px 14px; border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.15); backdrop-filter: blur(5px); width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 8px 10px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(5px);
+      width: 100%;
     }
+
     button.action-btn {
-      padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
-      border: none; border-radius: 8px; transition: all 0.15s ease; color: #fff;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 7px;
+      transition: all 0.15s ease;
+      color: #fff;
     }
-    button.action-btn:active { transform: translateY(1px); }
-    .btn-mark   { background: #3b82f6; box-shadow: 0 4px 6px rgba(59,130,246,0.3); }
-    .btn-mark:active   { background: #2563eb; }
-    .btn-export { background: #10b981; box-shadow: 0 4px 6px rgba(16,185,129,0.3); }
-    .btn-export:active { background: #059669; }
-    .btn-import { background: #8b5cf6; box-shadow: 0 4px 6px rgba(139,92,246,0.3); }
-    .btn-import:active { background: #7c3aed; }
+
+    button.action-btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-mark {
+      background: #3b82f6;
+      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-mark:active {
+      background: #2563eb;
+    }
+
+    .btn-export {
+      background: #10b981;
+      box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-export:active {
+      background: #059669;
+    }
+
+    .btn-import {
+      background: #8b5cf6;
+      box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-import:active {
+      background: #7c3aed;
+    }
+
+    .btn-ruler {
+      background: #f97316;
+      box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
+    }
+
+    .btn-ruler:active {
+      background: #ea580c;
+    }
+
+    .btn-ruler.active {
+      background: #c2410c;
+      box-shadow: 0 0 0 2px #fed7aa, 0 4px 6px rgba(249, 115, 22, 0.3);
+    }
 
     .autocenter-pill {
-      display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.92);
-      padding: 6px 12px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-      font-size: 12px; font-weight: 600; color: #374151; backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 6px 12px;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      backdrop-filter: blur(5px);
     }
-    .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .switch .slider {
-      position: absolute; cursor: pointer; inset: 0; background-color: #d1d5db;
-      transition: 0.2s; border-radius: 999px;
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #d1d5db;
+      transition: 0.2s;
+      border-radius: 999px;
     }
+
     .switch .slider:before {
-      position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px;
-      background-color: #fff; transition: 0.2s; border-radius: 50%;
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #fff;
+      transition: 0.2s;
+      border-radius: 50%;
     }
-    .switch input:checked + .slider { background-color: #3b82f6; }
-    .switch input:checked + .slider:before { transform: translateX(16px); }
+
+    .switch input:checked+.slider {
+      background-color: #3b82f6;
+    }
+
+    .switch input:checked+.slider:before {
+      transform: translateX(16px);
+    }
 
     .recenter-btn {
-      position: absolute; top: 12px; right: 12px; z-index: 1100; background: #fff;
-      border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); width: 40px; height: 40px;
-      display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; border: none;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1100;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
     }
 
-    .popup-control-group { margin-top: 6px; margin-bottom: 6px; text-align: left; }
-    .popup-control-group label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 3px; color: #374151; }
-    .condition-select, .lux-input {
-      width: 100%; padding: 5px; border-radius: 4px; border: 1px solid #d1d5db; font-size: 12px; outline: none;
+    .popup-control-group {
+      margin-top: 6px;
+      margin-bottom: 6px;
+      text-align: left;
     }
-    .done-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: #374151; font-weight: 600; }
-    .photo-row { display: flex; gap: 6px; margin-top: 6px; }
+
+    .popup-control-group label {
+      font-size: 12px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 3px;
+      color: #374151;
+    }
+
+    .condition-select,
+    .lux-input {
+      width: 100%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .done-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .photo-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
     .popup-thumb {
-      width: 46px; height: 46px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; cursor: pointer;
+      width: 46px;
+      height: 46px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
     }
-    .photo-btn-row { display: flex; gap: 6px; margin-top: 8px; }
+
+    .photo-btn-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
     .photo-btn {
-      flex: 1; font-size: 11px; font-weight: 600; padding: 6px 4px; border-radius: 4px; border: 1px solid #d1d5db;
-      background: #f9fafb; color: #374151; cursor: pointer;
+      flex: 1;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 4px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #374151;
+      cursor: pointer;
     }
-    .photo-btn:hover { background: #f3f4f6; }
+
+    .photo-btn:hover {
+      background: #f3f4f6;
+    }
+
     .delete-btn {
-      display: block; width: 100%; margin-top: 8px; padding: 6px 10px; background: #ef4444;
-      color: #fff; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
     }
-    .delete-btn:hover { background: #dc2626; }
+
+    .delete-btn:hover {
+      background: #dc2626;
+    }
+
     .done-badge {
-      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: #dcfce7; color: #166534;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
     }
 
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000;
-      display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-    .modal-overlay.active { display: flex; opacity: 1; }
-    .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 82%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-content h3 { margin-top: 0; color: #1f2937; }
-    .modal-content p { color: #4b5563; margin-bottom: 18px; font-size: 14px; }
-    .modal-content button { background: #3b82f6; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 82%;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+
+    .modal-content p {
+      color: #4b5563;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+
+    .modal-content button {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+    }
 
     .dist-tooltip {
-      background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border-radius: 6px; padding: 3px 7px; font-size: 11px; font-weight: 700; color: #1f2937; white-space: nowrap;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1f2937;
+      white-space: nowrap;
     }
-    .leaflet-tooltip-top:before { border-top-color: rgba(255,255,255,0.95); }
+
+    .measure-tooltip {
+      background: rgba(249, 115, 22, 0.95);
+      border: 1px solid #c2410c;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .leaflet-tooltip-top:before {
+      border-top-color: rgba(255, 255, 255, 0.95);
+    }
 
     .sidebar-toggle {
-      position: absolute; top: 12px; left: 12px; z-index: 1100; background: #fff;
-      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 8px 10px; cursor: pointer;
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1100;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      padding: 8px 10px;
+      cursor: pointer;
     }
-    @media (min-width: 768px) { .sidebar-toggle { display: none; } }
+
+    .measure-badge {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(249, 115, 22, 0.95);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .measure-badge.show {
+      display: flex;
+    }
+
+    .measure-badge button {
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .measure-badge button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .measure-vertex {
+      background: #f97316;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-undo {
+      background: #6b7280;
+      box-shadow: 0 4px 6px rgba(107, 114, 128, 0.3);
+    }
+
+    .btn-undo:active {
+      background: #4b5563;
+    }
+
+    .btn-undo:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .lux-badge {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1100;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 6px 14px;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400e;
+      backdrop-filter: blur(5px);
+    }
+
+    .lux-badge .lux-unit {
+      font-weight: 500;
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    .row-thumb {
+      width: 28px;
+      height: 28px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+
+    .row-condition-select,
+    .row-lux-input {
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 12px;
+      padding: 3px 4px;
+      outline: none;
+    }
+
+    @media (min-width: 768px) {
+      .sidebar-toggle {
+        display: none;
+      }
+    }
   </style>
 </head>
 
 <body class="bg-gray-50 flex h-screen overflow-hidden">
 
   <!-- Sidebar -->
-  <div id="sidebar" class="hidden md:flex w-full md:w-1/3 lg:w-1/4 h-full bg-white shadow-xl flex-col z-10 absolute md:relative inset-0">
+  <div id="sidebar"
+    class="hidden md:flex w-full md:w-1/3 lg:w-1/4 h-full bg-white shadow-xl flex-col z-10 absolute md:relative inset-0">
     <div class="p-5 border-b border-gray-100 bg-blue-600 text-white shadow-sm flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold leading-tight">Peta Penerangan</h1>
@@ -156,7 +543,9 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-3 py-2 text-left font-medium text-gray-500">ID</th>
+              <th class="px-3 py-2 text-center font-medium text-gray-500">Foto</th>
               <th class="px-3 py-2 text-left font-medium text-gray-500">Kondisi</th>
+              <th class="px-3 py-2 text-left font-medium text-gray-500">Lux</th>
               <th class="px-3 py-2 text-center font-medium text-gray-500">Selesai</th>
               <th class="px-3 py-2 text-center font-medium text-gray-500">Aksi</th>
             </tr>
@@ -174,11 +563,19 @@
   <!-- Map -->
   <div class="flex-1 h-full relative">
     <div class="sidebar-toggle" id="sidebarToggle">
-      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </div>
     <button id="recenterBtn" class="recenter-btn" title="Pusatkan ke lokasi saya">🎯</button>
+    <div id="luxBadge" class="lux-badge">
+      <span>💡</span><span id="luxValue">--</span><span class="lux-unit">lux</span>
+    </div>
+    <div id="measureBadge" class="measure-badge">
+      <span id="measureBadgeText">📏 Klik di peta untuk mulai mengukur</span>
+      <button id="measureClearBtn" title="Hapus titik ukur">Reset</button>
+    </div>
     <div id="map"></div>
 
     <div class="controls-wrap">
@@ -191,6 +588,8 @@
       </div>
       <div class="controls">
         <button id="markBtn" class="action-btn btn-mark">Mark Point</button>
+        <button id="rulerBtn" class="action-btn btn-ruler">📏 Ukur</button>
+        <button id="undoBtn" class="action-btn btn-undo" disabled title="Undo (Ctrl+Z)">↩️ Undo</button>
         <button id="exportBtn" class="action-btn btn-export">Export CSV</button>
         <button id="importBtn" class="action-btn btn-import">Import CSV</button>
         <input type="file" id="csvInput" accept=".csv" style="display:none;" />
@@ -250,8 +649,8 @@
 
     // ---------- Styling ----------
     const styles = {
-      Gelap:  { color: '#ef4444', border: '#b91c1c', badge: 'bg-red-100 text-red-800' },
-      Redup:  { color: '#eab308', border: '#a16207', badge: 'bg-yellow-100 text-yellow-800' },
+      Gelap: { color: '#ef4444', border: '#b91c1c', badge: 'bg-red-100 text-red-800' },
+      Redup: { color: '#eab308', border: '#a16207', badge: 'bg-yellow-100 text-yellow-800' },
       Terang: { color: '#22c55e', border: '#15803d', badge: 'bg-green-100 text-green-800' },
     };
     function iconFor(condition, done) {
@@ -265,9 +664,12 @@
       return L.divIcon({ html: svg, className: '', iconSize: [26, 26], iconAnchor: [12, 12], popupAnchor: [0, -10] });
     }
     function distanceLabel(latlng) {
-      if (!currentPos) return 'Menghitung…';
+      if (!currentPos) return '-';
       const d = currentPos.distanceTo(latlng);
-      return d < 1000 ? `${Math.round(d)} m` : `${(d / 1000).toFixed(2)} km`;
+      return d < 1000 ? `${d.toFixed(1)}m` : `${(d / 1000).toFixed(2)}km`;
+    }
+    function formatDistance(d) {
+      return d < 1000 ? `${d.toFixed(1)}m` : `${(d / 1000).toFixed(2)}km`;
     }
     function formatDate(d) {
       if (!d) return '';
@@ -276,7 +678,7 @@
     }
 
     // ---------- Image compression ----------
-    function compressImage(file, maxWidth = 640, quality = 0.6) {
+    function compressImage(file, maxWidth = 1920, quality = 0.6) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -287,6 +689,7 @@
             canvas.width = Math.round(img.width * scale);
             canvas.height = Math.round(img.height * scale);
             const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingQuality ="high"; 
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             resolve(canvas.toDataURL('image/jpeg', quality));
           };
@@ -322,7 +725,10 @@
         </div>
         <div class="popup-control-group">
           <label>Lux</label>
-          <input type="number" step="0.1" class="lux-input" value="${data.lux ?? 0}">
+          <div class="flex items-center gap-2">
+            <input type="number" step="0.1" class="lux-input flex-1" value="${data.lux ?? 0}">
+            <button type="button" class="lux-sync-btn text-[10px] px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Now</button>
+          </div>
         </div>
         <div class="done-row">
           <input type="checkbox" class="done-check" ${data.done ? 'checked' : ''}>
@@ -341,7 +747,17 @@
       `;
 
       div.querySelector('.condition-select').onchange = (e) => updateMarker(data.id, { ...data, condition: e.target.value });
-      div.querySelector('.lux-input').onchange = (e) => updateMarker(data.id, { ...data, lux: parseFloat(e.target.value) || 0 });
+      const luxInput = div.querySelector('.lux-input');
+      luxInput.onchange = (e) => updateMarker(data.id, { ...data, lux: parseFloat(e.target.value) || 0 });
+      div.querySelector('.lux-sync-btn').onclick = () => {
+        if (currentLux === null || currentLux === undefined) {
+          showModal('Sensor', 'Sensor lux belum tersedia.');
+          return;
+        }
+        const value = Math.round(currentLux * 10) / 10;
+        luxInput.value = value;
+        updateMarker(data.id, { ...data, lux: value });
+      };
       div.querySelector('.done-check').onchange = (e) => updateMarker(data.id, { ...data, done: e.target.checked ? 1 : 0 });
       div.querySelector('.delete-btn').onclick = () => deleteMarker(data.id);
 
@@ -349,7 +765,7 @@
       div.querySelector('.upload-photo-btn').onclick = () => photoInput.click();
       photoInput.onchange = async (e) => {
         const file = e.target.files[0]; if (!file) return;
-        try { const dataUrl = await compressImage(file); await updateMarker(data.id, { ...data, photo: dataUrl }); }
+        try { const dataUrl = await compressImage(file, 2000, 0.4); await updateMarker(data.id, { ...data, photo: dataUrl }); }
         catch { showModal('Error', 'Gagal memproses foto.'); }
       };
 
@@ -357,7 +773,7 @@
       div.querySelector('.upload-360-btn').onclick = () => photo360Input.click();
       photo360Input.onchange = async (e) => {
         const file = e.target.files[0]; if (!file) return;
-        try { const dataUrl = await compressImage(file, 960, 0.55); await updateMarker(data.id, { ...data, photo_360: dataUrl }); }
+        try { const dataUrl = await compressImage(file, 4000, 0.5); await updateMarker(data.id, { ...data, photo_360: dataUrl }); }
         catch { showModal('Error', 'Gagal memproses foto 360°.'); }
       };
 
@@ -371,45 +787,182 @@
       const tr = document.createElement('tr');
       tr.dataset.id = data.id;
       tr.className = 'hover:bg-blue-50 transition-colors';
+      const photoSrc = data.photo || data.photo_360 || '';
       tr.innerHTML = `
-        <td class="px-3 py-2 whitespace-nowrap"><div class="font-medium text-gray-900">#${data.id}</div></td>
         <td class="px-3 py-2 whitespace-nowrap">
-          <span class="row-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.badge}">${data.condition}</span>
+          <div class="font-medium text-gray-900">#${data.id}</div>
+          <div class="text-[10px] text-gray-400 truncate max-w-[90px]" title="${data.name || ''}">${data.name || ''}${data.date ? ' · ' + formatDate(data.date) : ''}</div>
+        </td>
+        <td class="px-3 py-2 text-center">
+          ${photoSrc ? `<img src="${photoSrc}" class="row-thumb" title="Lihat foto">` : '<span class="text-gray-300 text-xs">—</span>'}
+        </td>
+        <td class="px-3 py-2 whitespace-nowrap">
+          <select class="row-condition-select ${s.badge}">
+            <option value="Gelap" ${data.condition === 'Gelap' ? 'selected' : ''}>Gelap</option>
+            <option value="Redup" ${data.condition === 'Redup' ? 'selected' : ''}>Redup</option>
+            <option value="Terang" ${data.condition === 'Terang' ? 'selected' : ''}>Terang</option>
+          </select>
+        </td>
+        <td class="px-3 py-2 whitespace-nowrap">
+          <div class="flex items-center gap-1">
+            <input type="number" step="0.1" class="row-lux-input w-16" value="${data.lux ?? 0}">
+            <button type="button" class="row-lux-sync-btn text-[10px] px-1.5 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Now</button>
+          </div>
         </td>
         <td class="px-3 py-2 whitespace-nowrap text-center">
           <input type="checkbox" class="row-done" ${data.done ? 'checked' : ''}>
         </td>
         <td class="px-3 py-2 whitespace-nowrap text-center">
-          <button class="view-btn text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-xs font-medium transition-colors">Lihat</button>
+          <div class="flex gap-1 justify-center">
+            <button class="view-btn text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-xs font-medium transition-colors">Lihat</button>
+            <button class="row-delete-btn text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium transition-colors">Hapus</button>
+          </div>
         </td>`;
       tr.querySelector('.view-btn').onclick = () => focusMarker(data.id);
+      tr.querySelector('.row-delete-btn').onclick = () => deleteMarker(data.id);
       tr.querySelector('.row-done').onchange = (e) => {
         const entry = activeMarkers[data.id];
         if (entry) updateMarker(data.id, { ...entry.data, done: e.target.checked ? 1 : 0 });
       };
+      tr.querySelector('.row-condition-select').onchange = (e) => {
+        const entry = activeMarkers[data.id];
+        if (entry) updateMarker(data.id, { ...entry.data, condition: e.target.value });
+      };
+      tr.querySelector('.row-lux-input').onchange = (e) => {
+        const entry = activeMarkers[data.id];
+        if (entry) updateMarker(data.id, { ...entry.data, lux: parseFloat(e.target.value) || 0 });
+      };
+      tr.querySelector('.row-lux-sync-btn').onclick = () => {
+        if (currentLux === null || currentLux === undefined) {
+          showModal('Sensor', 'Sensor lux belum tersedia.');
+          return;
+        }
+        const value = Math.round(currentLux * 10) / 10;
+        tr.querySelector('.row-lux-input').value = value;
+        const entry = activeMarkers[data.id];
+        if (entry) updateMarker(data.id, { ...entry.data, lux: value });
+      };
+      if (photoSrc) {
+        tr.querySelector('.row-thumb').onclick = () => window.open(photoSrc, '_blank');
+      }
       tableBody.appendChild(tr);
     }
     function updateRow(data) {
       const tr = tableBody.querySelector(`tr[data-id="${data.id}"]`);
       if (!tr) return;
       const s = styles[data.condition] || styles.Terang;
-      const badge = tr.querySelector('.row-badge');
-      badge.className = `row-badge px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.badge}`;
-      badge.innerText = data.condition;
+      const select = tr.querySelector('.row-condition-select');
+      select.value = data.condition;
+      select.className = `row-condition-select ${s.badge}`;
+      tr.querySelector('.row-lux-input').value = data.lux ?? 0;
       tr.querySelector('.row-done').checked = !!data.done;
+      const photoSrc = data.photo || data.photo_360 || '';
+      const photoCell = tr.children[1];
+      photoCell.innerHTML = photoSrc ? `<img src="${photoSrc}" class="row-thumb" title="Lihat foto">` : '<span class="text-gray-300 text-xs">—</span>';
+      if (photoSrc) photoCell.querySelector('.row-thumb').onclick = () => window.open(photoSrc, '_blank');
     }
     function removeRow(id) {
       const tr = tableBody.querySelector(`tr[data-id="${id}"]`);
       if (tr) tr.remove();
     }
 
+    // ---------- Ruler / measure tool ----------
+    let measuring = false;
+    let measurePoints = []; // array of L.LatLng
+    let measureLine = null;
+    const measureVertexLayer = L.layerGroup().addTo(map);
+    const measureSegmentLabels = []; // tooltips per segment
+    const rulerBtn = document.getElementById('rulerBtn');
+    const measureBadge = document.getElementById('measureBadge');
+    const measureBadgeText = document.getElementById('measureBadgeText');
+    const measureClearBtn = document.getElementById('measureClearBtn');
+
+    function totalMeasureDistance() {
+      let total = 0;
+      for (let i = 1; i < measurePoints.length; i++) {
+        total += measurePoints[i - 1].distanceTo(measurePoints[i]);
+      }
+      return total;
+    }
+
+    function redrawMeasureLine() {
+      if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+      measureSegmentLabels.forEach(t => map.removeLayer(t));
+      measureSegmentLabels.length = 0;
+
+      if (measurePoints.length >= 2) {
+        measureLine = L.polyline(measurePoints, { color: '#f97316', weight: 3, dashArray: '6 6' }).addTo(map);
+        for (let i = 1; i < measurePoints.length; i++) {
+          const segDist = measurePoints[i - 1].distanceTo(measurePoints[i]);
+          const midLatLng = L.latLng(
+            (measurePoints[i - 1].lat + measurePoints[i].lat) / 2,
+            (measurePoints[i - 1].lng + measurePoints[i].lng) / 2
+          );
+          const label = L.tooltip({ permanent: true, direction: 'center', className: 'measure-tooltip' })
+            .setLatLng(midLatLng)
+            .setContent(formatDistance(segDist))
+            .addTo(map);
+          measureSegmentLabels.push(label);
+        }
+      }
+
+      if (measurePoints.length === 0) {
+        measureBadgeText.innerText = '📏 Klik di peta untuk mulai mengukur';
+      } else if (measurePoints.length === 1) {
+        measureBadgeText.innerText = '📏 Klik titik berikutnya…';
+      } else {
+        measureBadgeText.innerText = `📏 Total: ${formatDistance(totalMeasureDistance())} (${measurePoints.length} titik)`;
+      }
+    }
+
+    function addMeasurePoint(latlng) {
+      measurePoints.push(latlng);
+      const vertex = L.circleMarker(latlng, {
+        radius: 6, className: 'measure-vertex', weight: 2, color: '#fff', fillColor: '#f97316', fillOpacity: 1
+      }).addTo(measureVertexLayer);
+      vertex._isMeasureVertex = true;
+      redrawMeasureLine();
+    }
+
+    function clearMeasure() {
+      measurePoints = [];
+      measureVertexLayer.clearLayers();
+      redrawMeasureLine();
+    }
+
+    function setMeasuring(on) {
+      measuring = on;
+      rulerBtn.classList.toggle('active', on);
+      map.getContainer().style.cursor = on ? 'crosshair' : '';
+      if (on) {
+        measureBadge.classList.add('show');
+      } else {
+        measureBadge.classList.remove('show');
+        clearMeasure();
+      }
+    }
+
+    rulerBtn.onclick = () => setMeasuring(!measuring);
+    measureClearBtn.onclick = () => clearMeasure();
+
+    map.on('click', (e) => {
+      if (!measuring) return;
+      addMeasurePoint(e.latlng);
+    });
+
     // ---------- Map marker helpers ----------
     function addMarkerToMap(data) {
       if (activeMarkers[data.id]) return; // already present
       const latlng = [Number(data.latitude), Number(data.longitude)];
       const marker = L.marker(latlng, { icon: iconFor(data.condition, data.done) })
-        .bindTooltip(`Jarak: ${distanceLabel(L.latLng(latlng))}`, { permanent: true, direction: 'top', className: 'dist-tooltip', offset: [0, -14] })
+        .bindTooltip(`${distanceLabel(L.latLng(latlng))}`, { permanent: true, direction: 'top', className: 'dist-tooltip', offset: [0, -14] })
         .bindPopup(buildPopup(data), { maxWidth: 240 });
+      marker.on('click', (e) => {
+        if (!measuring) return;
+        L.DomEvent.stop(e);
+        marker.closePopup();
+        addMeasurePoint(e.latlng);
+      });
       markersLayer.addLayer(marker);
       activeMarkers[data.id] = { marker, data };
       renderRow(data);
@@ -459,28 +1012,74 @@
         showModal('Error', 'Gagal memuat data marker: ' + err.message);
       }
     }
-    async function createMarker(payload) {
+    async function createMarker(payload, opts = {}) {
       try {
         const data = await apiRequest('/marker', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         socket.emit('marker.add', data);
+        if (!opts.skipUndo) pushUndo({ type: 'add', id: data.id });
+        return data;
       } catch (err) { showModal('Error', 'Gagal menambah titik: ' + err.message); }
     }
-    async function updateMarker(id, payload) {
+    async function updateMarker(id, payload, opts = {}) {
       try {
+        const prevEntry = activeMarkers[id];
+        const prevData = prevEntry ? { ...prevEntry.data } : null;
         const data = await apiRequest(`/marker/${id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         socket.emit('marker.update', data);
+        if (!opts.skipUndo && prevData) pushUndo({ type: 'update', id, prevData });
       } catch (err) { showModal('Error', 'Gagal memperbarui titik: ' + err.message); }
     }
-    async function deleteMarker(id) {
+    async function deleteMarker(id, opts = {}) {
       try {
+        const prevEntry = activeMarkers[id];
+        const prevData = prevEntry ? { ...prevEntry.data } : null;
         await apiRequest(`/marker/${id}`, { method: 'DELETE' });
         socket.emit('marker.remove', { id });
+        if (!opts.skipUndo && prevData) pushUndo({ type: 'delete', data: prevData });
       } catch (err) { showModal('Error', 'Gagal menghapus titik: ' + err.message); }
     }
+
+    // ---------- Undo stack (Ctrl+Z desktop / Undo button mobile) ----------
+    let undoStack = [];
+    const undoBtn = document.getElementById('undoBtn');
+    function updateUndoBtnState() {
+      undoBtn.disabled = undoStack.length === 0;
+    }
+    function pushUndo(action) {
+      undoStack.push(action);
+      if (undoStack.length > 50) undoStack.shift();
+      updateUndoBtnState();
+    }
+    async function undoLastAction() {
+      if (!undoStack.length) { showModal('Undo', 'Tidak ada aksi untuk dibatalkan.'); return; }
+      const action = undoStack.pop();
+      updateUndoBtnState();
+      if (action.type === 'add') {
+        await deleteMarker(action.id, { skipUndo: true });
+      } else if (action.type === 'update') {
+        await updateMarker(action.id, action.prevData, { skipUndo: true });
+      } else if (action.type === 'delete') {
+        const { id: _oldId, ...rest } = action.data;
+        await createMarker(rest, { skipUndo: true });
+      }
+    }
+    undoBtn.onclick = undoLastAction;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && measuring) {
+        setMeasuring(false);
+        return;
+      }
+      const isUndoCombo = (e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z';
+      if (isUndoCombo) {
+        e.preventDefault();
+        undoLastAction();
+      }
+    });
 
     // ---------- Socket.io (co-op sync) ----------
     const socket = io();
@@ -508,7 +1107,7 @@
       firstLocate = false;
 
       Object.values(activeMarkers).forEach(({ marker }) => {
-        marker.setTooltipContent(`Jarak: ${distanceLabel(marker.getLatLng())}`);
+        marker.setTooltipContent(`${distanceLabel(marker.getLatLng())}`);
       });
     });
 
@@ -516,6 +1115,54 @@
       showModal('Location Error', 'Tidak dapat mengambil lokasi. Pastikan GPS aktif dan izin lokasi diberikan.');
       console.warn('Location error:', e.message);
     });
+
+    // ---------- Ambient light sensor (mobile lux) ----------
+    let currentLux = null;
+    let luxSensor = null;
+    const luxBadge = document.getElementById('luxBadge');
+    const luxValueEl = document.getElementById('luxValue');
+
+    function updateLuxDisplay() {
+      luxValueEl.innerText = currentLux !== null ? Math.round(currentLux * 10) / 10 : 'N/A';
+    }
+    updateLuxDisplay();
+
+    async function initLuxSensor() {
+      if (!('AmbientLightSensor' in window)) {
+        console.info('Sensor cahaya (AmbientLightSensor) tidak didukung di perangkat/browser ini.');
+        updateLuxDisplay();
+        return;
+      }
+      try {
+        if (navigator.permissions) {
+          try {
+            const status = await navigator.permissions.query({ name: 'ambient-light-sensor' });
+            if (status.state === 'denied') {
+              console.info('Izin sensor cahaya ditolak.');
+              updateLuxDisplay();
+              return;
+            }
+          } catch (permErr) {
+            // Some browsers don't recognize this permission name — try starting the sensor anyway.
+          }
+        }
+        luxSensor = new AmbientLightSensor({ frequency: 1 });
+        luxSensor.addEventListener('reading', () => {
+          currentLux = luxSensor.illuminance;
+          updateLuxDisplay();
+        });
+        luxSensor.addEventListener('error', (e) => {
+          console.warn('Sensor cahaya error:', e.error && e.error.message);
+          currentLux = null;
+          updateLuxDisplay();
+        });
+        luxSensor.start();
+      } catch (err) {
+        console.warn('Gagal menginisialisasi sensor cahaya:', err);
+        updateLuxDisplay();
+      }
+    }
+    initLuxSensor();
 
     // ---------- Controls ----------
     document.getElementById('markBtn').onclick = async () => {
@@ -526,8 +1173,9 @@
         name: new Date().toLocaleString(),
         latitude: currentPos.lat,
         longitude: currentPos.lng,
+        date: new Date().toISOString(),
         condition: 'Terang',
-        lux: 0,
+        lux: currentLux !== null ? Math.round(currentLux * 10) / 10 : 0,
         photo: '',
         photo_360: ''
       });
@@ -538,9 +1186,9 @@
     document.getElementById('exportBtn').onclick = () => {
       const rows = Object.values(activeMarkers).map(e => e.data);
       if (!rows.length) { showModal('Empty', 'Belum ada titik untuk diekspor.'); return; }
-      let csv = 'ID,Name,Latitude,Longitude,Condition,Lux,Done,Date\n';
+      let csv = 'ID,Name,Latitude,Longitude,Date,Condition,Lux,Done,Date\n';
       rows.forEach(p => {
-        csv += `${p.id},"${(p.name || '').replace(/"/g, '""')}",${p.latitude},${p.longitude},${p.condition},${p.lux ?? 0},${p.done ? 1 : 0},${p.date || ''}\n`;
+        csv += `${p.id},"${(p.name || '').replace(/"/g, '""')}",${p.latitude},${p.longitude},${p.date || ''},${p.condition},${p.lux ?? 0},${p.done ? 1 : 0},${p.date || ''}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -555,6 +1203,12 @@
 
     document.getElementById('importBtn').onclick = () => document.getElementById('csvInput').click();
 
+    function parseDate(dateStr) {
+      // Mengubah "DD/MM/YYYY, HH:mm:ss" menjadi "YYYY-MM-DDTHH:mm:ss"
+      const isoStr = dateStr.replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$2-$1T');
+      return new Date(isoStr);
+    }
+
     document.getElementById('csvInput').onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -564,19 +1218,20 @@
           const text = event.target.result;
           const lines = text.trim().split('\n');
           if (lines.length < 2) { showModal('Error', 'File CSV kosong atau tidak valid.'); return; }
-
           let imported = 0;
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             if (cols.length < 4) continue;
+            const id = parseInt(cols[0]);
             const name = (cols[1] || '').replace(/^"|"$/g, '').trim();
             const latitude = parseFloat(cols[2]);
             const longitude = parseFloat(cols[3]);
-            const condition = cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : 'Terang';
-            const lux = cols[5] ? parseFloat(cols[5]) : 0;
-            const done = cols[6] ? (cols[6].trim() === '1' ? 1 : 0) : 0;
+            const date = cols[4] ? parseDate(cols[4].replace(/^"|"$/g, '').trim()) : null;
+            const condition = cols[5] ? cols[5].replace(/^"|"$/g, '').trim() : 'Terang';
+            const lux = cols[6] ? parseFloat(cols[6]) : 0;
+            const done = cols[7] ? (cols[7].trim() === '1' ? 1 : 0) : 0;
             if (isNaN(latitude) || isNaN(longitude)) continue;
-            await createMarker({ name, latitude, longitude, condition, lux: isNaN(lux) ? 0 : lux, done, photo: '', photo_360: '' });
+            await createMarker({ name, latitude, longitude, condition, lux: isNaN(lux) ? 0 : lux, done, photo: '', photo_360: '', date });
             imported++;
           }
           imported > 0
@@ -595,4 +1250,5 @@
     loadMarkers();
   </script>
 </body>
+
 </html>

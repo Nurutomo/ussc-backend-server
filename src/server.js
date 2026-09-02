@@ -1,15 +1,20 @@
 import express from 'express'
 import { Server } from 'socket.io'
 import { Marker } from './routes/index.js'
+import morgan from 'morgan'
 
 export default function startServer(port = 3000) {
   const app = express()
 
   app.set('view engine', 'ejs')
   
-  app.use(express.json())
+  // Increase JSON payload limit (e.g., to 10MB)
+  app.use(morgan('dev'))
+  app.use(express.json({ limit: '30mb' }))
+  app.use(express.static('public'))
+
   app.use('/marker', Marker.default)
-  
+
   app.get('/', (req, res) => {
     res.render('index')
   })
