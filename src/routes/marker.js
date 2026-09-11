@@ -2,7 +2,7 @@ import { Router } from 'express'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pool } from '../lib/database.js'
+import { pool, markerSchemaReady } from '../lib/database.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -36,6 +36,7 @@ async function saveImageToDisk(imageValue, fieldName) {
 
 router.get('/', async (req, res, next) => {
   try {
+    await markerSchemaReady
     const [rows] = await pool.query('SELECT * FROM marker ORDER BY id ASC')
     res.json(rows)
   } catch (err) {
@@ -45,6 +46,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
+    await markerSchemaReady
     const { id } = req.params
     const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
     if (!rows.length) return res.status(404).json({ error: 'Marker not found' })
@@ -56,7 +58,8 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { name, latitude, longitude, condition, lux, photo, photo_360, date } = req.body
+    await markerSchemaReady
+    const { name, latitude, longitude, condition, lux, photo, photo_360, date, marker_type } = req.body
 
     if (latitude == null || longitude == null) {
       return res.status(400).json({ error: 'latitude and longitude are required' })
@@ -64,15 +67,16 @@ router.post('/', async (req, res, next) => {
 
     const finalName = name || `Titik ${new Date().toLocaleString()}`
     const finalCondition = condition || 'Terang'
-    const finalLux = lux != null ? lux : 0
+    const finalLux = lux != null ? lux : null
+    const finalMarkerType = marker_type || 'pju'
     const finalPhoto = await saveImageToDisk(photo, 'photo')
     const finalPhoto360 = await saveImageToDisk(photo_360, 'photo_360')
     const finalDate = new Date(date || Date.now())
 
     const [result] = await pool.query(
-      `INSERT INTO marker (name, latitude, longitude, \`condition\`, lux, photo, photo_360, date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [finalName, latitude, longitude, finalCondition, finalLux, finalPhoto, finalPhoto360, finalDate]
+      `INSERT INTO marker (name, latitude, longitude, \`condition\`, lux, photo, photo_360, date, marker_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [finalName, latitude, longitude, finalCondition, finalLux, finalPhoto, finalPhoto360, finalDate, finalMarkerType]
     )
 
     console.log(result)
@@ -86,8 +90,9 @@ router.post('/', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
+    await markerSchemaReady
     const { id } = req.params
-    const { name, latitude, longitude, condition, lux, photo, photo_360, done } = req.body
+    const { name, latitude, longitude, condition, lux, photo, photo_360, done, marker_type } = req.body
 
     const [existing] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
     if (!existing.length) return res.status(404).json({ error: 'Marker not found' })
@@ -102,13 +107,14 @@ router.put('/:id', async (req, res, next) => {
       photo: photo !== undefined ? await saveImageToDisk(photo, 'photo') : current.photo,
       photo_360: photo_360 !== undefined ? await saveImageToDisk(photo_360, 'photo_360') : current.photo_360,
       done: done !== undefined ? done : current.done,
+      marker_type: marker_type !== undefined ? marker_type : (current.marker_type || 'pju'),
     }
 
     await pool.query(
       `UPDATE marker
-       SET name = ?, latitude = ?, longitude = ?, \`condition\` = ?, lux = ?, photo = ?, photo_360 = ?, done = ?
+      SET name = ?, latitude = ?, longitude = ?, \`condition\` = ?, lux = ?, photo = ?, photo_360 = ?, done = ?, marker_type = ?
        WHERE id = ?`,
-      [merged.name, merged.latitude, merged.longitude, merged.condition, merged.lux, merged.photo, merged.photo_360, merged.done, id]
+          [merged.name, merged.latitude, merged.longitude, merged.condition, merged.lux, merged.photo, merged.photo_360, merged.done, merged.marker_type, id]
     )
 
     const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
@@ -120,6 +126,7 @@ router.put('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
+    await markerSchemaReady
     const { id } = req.params
     await pool.query('DELETE FROM marker WHERE id = ?', [id])
     res.json({ message: 'Marker removed', id: Number(id) })

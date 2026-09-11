@@ -13,14 +13,27 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "build": "vite build",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
+    "leaflet": "^1.9.4",
+    "mdb-react-ui-kit": "^10.0.0",
     "morgan": "^1.12.0",
     "mysql2": "^3.24.3",
-    "socket.io": "^4.8.3"
+    "pannellum": "^2.5.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.2.2"
   }
 }

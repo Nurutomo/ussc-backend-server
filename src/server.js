@@ -11,6 +11,7 @@ export default function startServer(port = 3000) {
   // Increase JSON payload limit (e.g., to 10MB)
   app.use(morgan('dev'))
   app.use(express.json({ limit: '30mb' }))
+  app.use(express.static('buildReact'))
   app.use(express.static('public'))
 
   app.use('/marker', Marker.default)
@@ -24,15 +25,22 @@ export default function startServer(port = 3000) {
   })
   const io = new Server(server)
   io.on('connection', (socket) => {
-    console.log('A user connected')
+    console.log(`Client connected: ${socket.id}`)
     socket.on('marker.add', (msg) => {
+      console.log('marker.add', msg)
       io.emit('marker.add', msg)
     })
     socket.on('marker.remove', (msg) => {
+      console.log('marker.remove', msg)
       io.emit('marker.remove', msg)
     })
     socket.on('marker.update', (msg) => {
+      console.log('marker.update', msg)
       io.emit('marker.update', msg)
+    })
+    socket.on('point.location', (msg) => {
+      console.log('point.location', msg)
+      io.emit('point.location', msg)
     })
   })
 
