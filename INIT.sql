@@ -1,5 +1,5 @@
 CREATE TABLE `marker` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` tinytext NOT NULL,
   `date` datetime NOT NULL DEFAULT current_timestamp(),
   `latitude` double NOT NULL,
@@ -10,5 +10,6 @@ CREATE TABLE `marker` (
   `done` int(11) DEFAULT NULL,
   `condition` text NOT NULL,
   `mode` text NOT NULL,
-  `marker_type` varchar(32) NOT NULL DEFAULT 'pju'
+  `marker_type` varchar(32) NOT NULL DEFAULT 'pju',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci

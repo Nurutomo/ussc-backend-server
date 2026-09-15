@@ -67,16 +67,16 @@ router.post('/', async (req, res, next) => {
 
     const finalName = name || `Titik ${new Date().toLocaleString()}`
     const finalCondition = condition || 'Terang'
-    const finalLux = lux != null ? lux : null
+    const finalLux = lux != null ? lux : 0
     const finalMarkerType = marker_type || 'pju'
     const finalPhoto = await saveImageToDisk(photo, 'photo')
     const finalPhoto360 = await saveImageToDisk(photo_360, 'photo_360')
     const finalDate = new Date(date || Date.now())
 
     const [result] = await pool.query(
-      `INSERT INTO marker (name, latitude, longitude, \`condition\`, lux, photo, photo_360, date, marker_type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [finalName, latitude, longitude, finalCondition, finalLux, finalPhoto, finalPhoto360, finalDate, finalMarkerType]
+      `INSERT INTO marker (name, latitude, longitude, \`condition\`, lux, photo, photo_360, date, mode, marker_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [finalName, latitude, longitude, finalCondition, finalLux, finalPhoto, finalPhoto360, finalDate, finalMarkerType, finalMarkerType]
     )
 
     console.log(result)
@@ -107,14 +107,25 @@ router.put('/:id', async (req, res, next) => {
       photo: photo !== undefined ? await saveImageToDisk(photo, 'photo') : current.photo,
       photo_360: photo_360 !== undefined ? await saveImageToDisk(photo_360, 'photo_360') : current.photo_360,
       done: done !== undefined ? done : current.done,
-      marker_type: marker_type !== undefined ? marker_type : (current.marker_type || 'pju'),
+      marker_type: marker_type !== undefined ? marker_type : current.marker_type || 'pju',
     }
 
     await pool.query(
       `UPDATE marker
       SET name = ?, latitude = ?, longitude = ?, \`condition\` = ?, lux = ?, photo = ?, photo_360 = ?, done = ?, marker_type = ?
        WHERE id = ?`,
-          [merged.name, merged.latitude, merged.longitude, merged.condition, merged.lux, merged.photo, merged.photo_360, merged.done, merged.marker_type, id]
+      [
+        merged.name,
+        merged.latitude,
+        merged.longitude,
+        merged.condition,
+        merged.lux,
+        merged.photo,
+        merged.photo_360,
+        merged.done,
+        merged.marker_type,
+        id,
+      ]
     )
 
     const [rows] = await pool.query('SELECT * FROM marker WHERE id = ?', [id])
