@@ -36,7 +36,15 @@ export default function App() {
   const [viewerImage, setViewerImage] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [connected, setConnected] = useState(false)
-  const visibleMarkers = markers.filter((marker) => (marker.marker_type || 'pju') === mode)
+  const [searchTerm, setSearchTerm] = useState('')
+  const visibleMarkers = markers.filter((marker) => {
+    if ((marker.marker_type || 'pju') !== mode) return false
+    const query = searchTerm.trim().toLowerCase()
+    if (!query) return true
+    return [marker.id, marker.name, marker.condition, marker.latitude, marker.longitude]
+      .filter((value) => value != null)
+      .some((value) => String(value).toLowerCase().includes(query))
+  })
   const selected = markers.find((marker) => marker.id === selectedId)
   const openViewer = (image, type = 'photo') => setViewerImage({ image, type })
   const goToMarker = (id) => {
@@ -103,7 +111,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const map = L.map(mapElement.current, { zoomControl: false, maxZoom: 24 }).setView([-7.2575, 112.7521], 15)
+    const map = L.map(mapElement.current, { zoomControl: false, maxZoom: 24 }).setView([-7.301062, 112.670743], 17)
     L.control.zoom({ position: 'bottomright' }).addTo(map)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       referrerPolicy: 'strict-origin-when-cross-origin',
@@ -301,6 +309,8 @@ export default function App() {
         mobile={isMobile}
         connected={connected}
         markers={visibleMarkers}
+        searchTerm={searchTerm}
+        onSearch={setSearchTerm}
         onUpdate={saveMarker}
         onDelete={deleteMarker}
         onMove={(id) => setPlacement({ kind: 'move', id })}

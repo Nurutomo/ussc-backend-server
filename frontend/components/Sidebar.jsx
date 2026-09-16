@@ -1,7 +1,7 @@
-import { MDBBadge, MDBBtn, MDBTable, MDBTableBody, MDBTableHead } from 'mdb-react-ui-kit'
+import { MDBBadge, MDBBtn, MDBInput, MDBTable, MDBTableBody, MDBTableHead } from 'mdb-react-ui-kit'
 import MarkerRow from './MarkerRow'
 
-export default function Sidebar({ open, mobile, connected, markers, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer, onClose }) {
+export default function Sidebar({ open, mobile, connected, markers, searchTerm, onSearch, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer, onClose }) {
   return (
     <aside
       className="bg-white shadow animation fade-in"
@@ -52,7 +52,17 @@ export default function Sidebar({ open, mobile, connected, markers, onUpdate, on
         </span>
       </section>
       <section className="p-3 overflow-auto flex-grow-1">
-        <h2 className="h6">Daftar Titik Lokasi</h2>
+        <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <h2 className="h6 mb-0">Daftar Titik Lokasi</h2>
+          <small className="text-muted">{markers.length}</small>
+        </div>
+        <MDBInput
+          size="sm"
+          label="Cari marker"
+          value={searchTerm}
+          onChange={(event) => onSearch(event.target.value)}
+          className="mb-3"
+        />
         <div className="table-responsive border rounded animation fade-in">
           <MDBTable small hover className="mb-0 align-middle" style={{ minWidth: '760px' }}>
             <MDBTableHead light>
@@ -80,6 +90,13 @@ export default function Sidebar({ open, mobile, connected, markers, onUpdate, on
                   onViewer={onViewer}
                 />
               ))}
+              {!markers.length && (
+                <tr>
+                  <td colSpan="7" className="text-center text-muted py-3">
+                    Marker tidak ditemukan
+                  </td>
+                </tr>
+              )}
             </MDBTableBody>
           </MDBTable>
         </div>

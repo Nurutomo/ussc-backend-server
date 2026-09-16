@@ -5,6 +5,7 @@ import { MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBInput } from 'mdb-react-u
 
 export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocate, onClose, onViewer }) {
   const [name, setName] = useState(data.name || '')
+  const photo360Preview = data.photo_360?.endsWith('/config.json') ? data.photo_360.replace(/\/config\.json$/, '/fallback/f.jpg') : data.photo_360
   useEffect(() => setName(data.name || ''), [data.id, data.name])
   const upload = async (event, field, width, quality) => {
     const file = event.target.files[0]
@@ -61,17 +62,30 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
         <MDBCheckbox label="Sudah ditinjau" checked={!!data.done} onChange={(event) => onUpdate(data.id, { done: event.target.checked ? 1 : 0 })} />
         <div className="d-flex flex-wrap gap-2">
           {data.photo && (
-            <img
-              src={data.photo}
-              alt={data.name || 'Marker image'}
-              style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
-              onClick={() => onViewer(data.photo, 'photo')}
-            />
+            <div className="d-flex align-items-start gap-1">
+              <img
+                src={data.photo}
+                alt={data.name || 'Marker image'}
+                style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
+                onClick={() => onViewer(data.photo, 'photo')}
+              />
+              <MDBBtn color="danger" size="sm" className="p-1" aria-label="Hapus foto biasa" title="Hapus foto biasa" onClick={() => onUpdate(data.id, { photo: '' })}>
+                <i className="fas fa-trash" />
+              </MDBBtn>
+            </div>
           )}
           {data.photo_360 && (
-            <MDBBtn color="info" size="sm" aria-label="Buka foto 360" title="Buka foto 360" onClick={() => onViewer(data.photo_360, '360')}>
-              <i className="fas fa-globe" />
-            </MDBBtn>
+            <div className="d-flex align-items-start gap-1">
+              <img
+                src={photo360Preview}
+                alt="Pratinjau foto 360"
+                style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
+                onClick={() => onViewer(data.photo_360, '360')}
+              />
+              <MDBBtn color="danger" size="sm" className="p-1" aria-label="Hapus foto 360" title="Hapus foto 360" onClick={() => onUpdate(data.id, { photo_360: '' })}>
+                <i className="fas fa-trash" />
+              </MDBBtn>
+            </div>
           )}
           <MDBBtn tag="label" color="light" size="sm">
             📷 Foto
@@ -88,7 +102,7 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
         <MDBBtn color="info" aria-label="Menuju marker" title="Menuju marker" onClick={() => onLocate(data.id)}>
           <i className="fas fa-location-arrow" />
         </MDBBtn>
-        <MDBBtn color="danger" aria-label="Hapus marker" title="Hapus marker" onClick={() => onDelete(data.id)}>
+        <MDBBtn color="danger" aria-label="Hapus marker dan semua foto" title="Hapus marker dan semua foto" onClick={() => onDelete(data.id)}>
           <i className="fas fa-trash" />
         </MDBBtn>
       </MDBCardBody>

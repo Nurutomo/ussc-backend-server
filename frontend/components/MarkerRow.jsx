@@ -5,6 +5,7 @@ import { MDBBtn, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
 
 export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer }) {
   const [name, setName] = useState(data.name || '')
+  const photo360Preview = data.photo_360?.endsWith('/config.json') ? data.photo_360.replace(/\/config\.json$/, '/fallback/f.jpg') : data.photo_360
   useEffect(() => setName(data.name || ''), [data.name])
 
   const upload = async (event, field, width, quality) => {
@@ -40,7 +41,7 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
       <td>
         <div className="d-flex gap-1 align-items-center">
           {data.photo && (
-            <MDBBtn tag="button" color="link" className="p-0" title="Preview foto" onClick={() => onViewer(data.photo)}>
+            <MDBBtn tag="button" color="link" className="p-0" title="Preview foto" onClick={() => onViewer(data.photo, 'photo')}>
               <img
                 src={data.photo}
                 alt={data.name || 'Marker image'}
@@ -49,8 +50,8 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
             </MDBBtn>
           )}
           {data.photo_360 && (
-            <MDBBtn color="info" size="sm" aria-label="Buka foto 360" title="Buka foto 360" onClick={() => onViewer(data.photo_360, '360')}>
-              <i className="fas fa-globe" />
+            <MDBBtn tag="button" color="link" className="p-0" aria-label="Buka foto 360" title="Buka foto 360" onClick={() => onViewer(data.photo_360, '360')}>
+              <img src={photo360Preview} alt="Pratinjau foto 360" style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '6px' }} />
             </MDBBtn>
           )}
           {!data.photo && <span className="text-muted">-</span>}
@@ -62,6 +63,16 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
             🌐
             <input type="file" className="d-none" accept="image/*" onChange={(event) => upload(event, 'photo_360', 8000, 0.8)} />
           </MDBBtn>
+          {data.photo && (
+            <MDBBtn color="danger" size="sm" aria-label="Hapus foto biasa" title="Hapus foto biasa" onClick={() => onUpdate(data.id, { photo: '' })}>
+              <i className="fas fa-trash" />
+            </MDBBtn>
+          )}
+          {data.photo_360 && (
+            <MDBBtn color="danger" size="sm" aria-label="Hapus foto 360" title="Hapus foto 360" onClick={() => onUpdate(data.id, { photo_360: '' })}>
+              <i className="fas fa-trash" />
+            </MDBBtn>
+          )}
         </div>
       </td>
       <td>
@@ -98,7 +109,7 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
         <MDBBtn size="sm" color="secondary" aria-label="Pindahkan marker" title="Pindahkan marker" onClick={() => onMove(data.id)}>
           <i className="fas fa-arrows-up-down-left-right" />
         </MDBBtn>
-        <MDBBtn size="sm" color="danger" aria-label="Hapus marker" title="Hapus marker" onClick={() => onDelete(data.id)}>
+        <MDBBtn size="sm" color="danger" aria-label="Hapus marker dan semua foto" title="Hapus marker dan semua foto" onClick={() => onDelete(data.id)}>
           <i className="fas fa-trash" />
         </MDBBtn>
       </td>
