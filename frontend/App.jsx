@@ -5,6 +5,7 @@ import { MarkerApi, SocketConnection } from './util/services'
 import { distance, markerIcon } from './util'
 import MarkerEditor from './components/MarkerEditor'
 import Panorama from './components/Viewer/Panorama'
+import Photo from './components/Viewer/Photo'
 import MeasureTool from './components/MeasureTool'
 import Sidebar from './components/Sidebar'
 import MapControls from './components/MapControls'
@@ -37,6 +38,13 @@ export default function App() {
   const [connected, setConnected] = useState(false)
   const visibleMarkers = markers.filter((marker) => (marker.marker_type || 'pju') === mode)
   const selected = markers.find((marker) => marker.id === selectedId)
+  const openViewer = (image, type = 'photo') => setViewerImage({ image, type })
+  const goToMarker = (id) => {
+    const marker = markersRef.current.find((item) => item.id === id)
+    if (!marker || !mapRef.current) return
+    mapRef.current.flyTo([Number(marker.latitude), Number(marker.longitude)], 18)
+    setSelectedId(id)
+  }
 
   useEffect(() => {
     const updateViewport = () => {
@@ -188,9 +196,12 @@ export default function App() {
           `<div style="min-width:150px;text-align:center"><strong>#${data.id}</strong><div style="font-weight:600;margin:4px 0 6px">${data.name || ''}</div>${popupImage}<div>${Number(data.latitude).toFixed(6)}, ${Number(data.longitude).toFixed(6)}</div></div>`
         )
         .addTo(markerLayer.current)
-      marker.on('click', () => setSelectedId(data.id))
+      marker.on('click', () => {
+        setSelectedId(data.id)
+        if (measure && !placement) mapRef.current?.fire('click', { latlng: point })
+      })
     })
-  }, [markers, mode, showLabels, currentPosition, visibleMarkers])
+  }, [markers, mode, showLabels, currentPosition, visibleMarkers, measure, placement])
 
   useEffect(() => {
     if (!mapRef.current || !currentPosition) return
@@ -293,8 +304,9 @@ export default function App() {
         onUpdate={saveMarker}
         onDelete={deleteMarker}
         onMove={(id) => setPlacement({ kind: 'move', id })}
+        onLocate={goToMarker}
         onSelect={setSelectedId}
-        onViewer={setViewerImage}
+        onViewer={openViewer}
         onClose={() => setSidebarOpen(false)}
       />
       <main className="position-relative flex-grow-1 animation fade-in" style={{ minWidth: 0 }}>
@@ -325,11 +337,13 @@ export default function App() {
           onUpdate={saveMarker}
           onDelete={deleteMarker}
           onMove={(id) => setPlacement({ kind: 'move', id })}
+          onLocate={goToMarker}
           onClose={() => setSelectedId(null)}
-          onViewer={setViewerImage}
+          onViewer={openViewer}
         />
       )}
-      {viewerImage && <Panorama image={viewerImage} onClose={() => setViewerImage(null)} />}
+      {viewerImage?.type === '360' && <Panorama image={viewerImage.image} onClose={() => setViewerImage(null)} />}
+      {viewerImage?.type === 'photo' && <Photo image={viewerImage.image} onClose={() => setViewerImage(null)} />}
       <MapFeedback placement={placement} setPlacement={setPlacement} notice={notice} setNotice={setNotice} />
     </div>
   )

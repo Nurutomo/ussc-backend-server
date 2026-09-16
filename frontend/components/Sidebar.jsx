@@ -1,7 +1,7 @@
 import { MDBBadge, MDBBtn, MDBTable, MDBTableBody, MDBTableHead } from 'mdb-react-ui-kit'
 import MarkerRow from './MarkerRow'
 
-export default function Sidebar({ open, mobile, connected, markers, onUpdate, onDelete, onMove, onSelect, onViewer, onClose }) {
+export default function Sidebar({ open, mobile, connected, markers, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer, onClose }) {
   return (
     <aside
       className="bg-white shadow animation fade-in"
@@ -75,6 +75,7 @@ export default function Sidebar({ open, mobile, connected, markers, onUpdate, on
                   onUpdate={onUpdate}
                   onDelete={onDelete}
                   onMove={onMove}
+                  onLocate={onLocate}
                   onSelect={onSelect}
                   onViewer={onViewer}
                 />

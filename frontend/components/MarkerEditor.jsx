@@ -3,7 +3,7 @@ import { CONDITIONS, MODES } from '../constants'
 import { ImageUtility } from '../util/services'
 import { MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
 
-export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onClose, onViewer }) {
+export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocate, onClose, onViewer }) {
   const [name, setName] = useState(data.name || '')
   useEffect(() => setName(data.name || ''), [data.id, data.name])
   const upload = async (event, field, width, quality) => {
@@ -65,11 +65,11 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onClose
               src={data.photo}
               alt={data.name || 'Marker image'}
               style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
-              onClick={() => window.open(data.photo, '_blank')}
+              onClick={() => onViewer(data.photo, 'photo')}
             />
           )}
           {data.photo_360 && (
-            <MDBBtn color="info" size="sm" aria-label="Buka foto 360" title="Buka foto 360" onClick={() => onViewer(data.photo_360)}>
+            <MDBBtn color="info" size="sm" aria-label="Buka foto 360" title="Buka foto 360" onClick={() => onViewer(data.photo_360, '360')}>
               <i className="fas fa-globe" />
             </MDBBtn>
           )}
@@ -84,6 +84,9 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onClose
         </div>
         <MDBBtn color="secondary" aria-label="Pindahkan marker" title="Pindahkan marker" onClick={() => onMove(data.id)}>
           <i className="fas fa-arrows-up-down-left-right" />
+        </MDBBtn>
+        <MDBBtn color="info" aria-label="Menuju marker" title="Menuju marker" onClick={() => onLocate(data.id)}>
+          <i className="fas fa-location-arrow" />
         </MDBBtn>
         <MDBBtn color="danger" aria-label="Hapus marker" title="Hapus marker" onClick={() => onDelete(data.id)}>
           <i className="fas fa-trash" />

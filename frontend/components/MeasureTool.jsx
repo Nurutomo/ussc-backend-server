@@ -28,7 +28,7 @@ export default function MeasureTool({ map, markers, active }) {
     const click = (event) => {
       if (!active) return
       points.current.push(event.latlng)
-      L.circleMarker(event.latlng, { radius: 6, color: '#fff', weight: 2, fillColor: '#f97316', fillOpacity: 1 }).addTo(layer.current)
+      L.circleMarker(event.latlng, { radius: 4, color: '#fff', weight: 2, fillColor: '#f97316', fillOpacity: 1 }).addTo(layer.current)
       if (line.current) map.removeLayer(line.current)
       labels.current.forEach((label) => map.removeLayer(label))
       labels.current = []

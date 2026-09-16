@@ -3,7 +3,7 @@ import { CONDITIONS, MODES } from '../constants'
 import { ImageUtility } from '../util/services'
 import { MDBBtn, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
 
-export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onSelect, onViewer }) {
+export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer }) {
   const [name, setName] = useState(data.name || '')
   useEffect(() => setName(data.name || ''), [data.name])
 
@@ -91,6 +91,9 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onS
       <td>
         <MDBBtn size="sm" color="primary" aria-label="Lihat marker" title="Lihat marker" onClick={() => onSelect(data.id)}>
           <i className="fas fa-eye" />
+        </MDBBtn>
+        <MDBBtn size="sm" color="info" aria-label="Menuju marker" title="Menuju marker" onClick={() => onLocate(data.id)}>
+          <i className="fas fa-location-arrow" />
         </MDBBtn>
         <MDBBtn size="sm" color="secondary" aria-label="Pindahkan marker" title="Pindahkan marker" onClick={() => onMove(data.id)}>
           <i className="fas fa-arrows-up-down-left-right" />
