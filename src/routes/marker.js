@@ -44,16 +44,12 @@ async function saveImageToDisk(imageValue, fieldName, markerId) {
       const sourcePath = path.join(imgDir, `${directoryName}.${extension}`)
       await ensureImageDirectory()
       await fs.writeFile(sourcePath, Buffer.from(base64Data, 'base64'))
-      try {
-        await process360(sourcePath, {
-          output: outputDir,
-          basePath: `/img/${directoryName}`,
-          normalizeToFullPanorama: true,
-          autoload: true,
-        })
-      } finally {
-        await fs.unlink(sourcePath).catch(() => {})
-      }
+      await process360(sourcePath, {
+        output: outputDir,
+        basePath: `/img/${directoryName}`,
+        normalizeToFullPanorama: true,
+        autoload: true,
+      })
       return `/img/${directoryName}/config.json`
     }
 
