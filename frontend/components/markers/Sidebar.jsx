@@ -68,10 +68,9 @@ export default function Sidebar({ open, mobile, connected, markers, searchTerm, 
             <MDBTableHead light>
               <tr>
                 <th>ID</th>
-                <th>Mode</th>
                 <th>Foto</th>
                 <th>Kondisi</th>
-                <th>Lux</th>
+                {markers[0]?.marker_type === 'pju' && <th>Lux</th>}
                 <th>Selesai</th>
                 <th>Aksi</th>
               </tr>

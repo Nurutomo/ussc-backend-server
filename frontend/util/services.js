@@ -1,5 +1,10 @@
 import { io } from 'socket.io-client'
 
+export const uploadEvent = async (event, field, width = 4000, quality = 0.4) => {
+  const file = event.target.files[0]
+  if (file) onUpdate(data.id, { [field]: await ImageUtility.compress(file, field === '360' ? 10000 : width, field === '360' ? 0.8 : quality) })
+}
+
 export class MarkerApi {
   async request(path, options = {}) {
     const response = await fetch(`/marker${path}`, options)

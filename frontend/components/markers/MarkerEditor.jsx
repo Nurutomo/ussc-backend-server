@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react'
 import { CONDITIONS, MODES } from '../../constants'
-import { ImageUtility } from '../../util/services'
-import { MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
+import { uploadEvent } from '../../util/services'
+import { MDBBtnGroup, MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBDropdown, MDBDropdownMenu, MDBDropdownToggle, MDBDropdownItem, MDBInput } from 'mdb-react-ui-kit'
 
 export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocate, onClose, onViewer }) {
   const [name, setName] = useState(data.name || '')
   const photo360Preview = data.photo_360?.endsWith('/config.json') ? data.photo_360.replace(/\/config\.json$/, '/fallback/f.jpg') : data.photo_360
   useEffect(() => setName(data.name || ''), [data.id, data.name])
-  const upload = async (event, field, width, quality) => {
-    const file = event.target.files[0]
-    if (file) onUpdate(data.id, { [field]: await ImageUtility.compress(file, width, quality) })
-  }
 
   return (
     <MDBCard
@@ -23,34 +19,42 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
         </MDBBtn>
         <h2 className="h5">#{data.id}</h2>
         <MDBInput label="Nama" value={name} onChange={(event) => setName(event.target.value)} onBlur={() => onUpdate(data.id, { name })} />
-        <label className="small text-muted">
-          Mode
-          <select
-            className="form-select form-select-sm"
-            value={data.marker_type || 'pju'}
-            onChange={(event) => onUpdate(data.id, { marker_type: event.target.value })}
-          >
+        <MDBDropdown>
+          <MDBDropdownToggle color="light" size="sm" className="w-100 text-start">
+            {MODES.find((item) => item.value === (data.marker_type || 'pju'))?.label || 'PJU'}
+          </MDBDropdownToggle>
+          <MDBDropdownMenu>
             {MODES.map((item) => (
-              <option key={item.value} value={item.value}>
+              <MDBDropdownItem
+                key={item.value}
+                link
+                onClick={() => {
+                  onUpdate(data.id, { marker_type: item.value })
+                  localStorage.setItem('activeMarkerType', item.value)
+                }}
+              >
                 {item.label}
-              </option>
+              </MDBDropdownItem>
             ))}
-          </select>
-        </label>
-        <label>
-          Kondisi
-          <select
-            className="form-select form-select-sm"
-            value={data.condition || 'Terang'}
-            onChange={(event) => onUpdate(data.id, { condition: event.target.value })}
-          >
+          </MDBDropdownMenu>
+        </MDBDropdown>
+        <MDBDropdown>
+          <MDBDropdownToggle color="light" size="sm" className="w-100 text-start">
+            {data.condition || 'Terang'}
+          </MDBDropdownToggle>
+          <MDBDropdownMenu>
             {CONDITIONS.map((value) => (
-              <option key={value}>{value}</option>
+              <MDBDropdownItem
+                key={value}
+                link
+                onClick={() => onUpdate(data.id, { condition: value })}
+              >
+                {value}
+              </MDBDropdownItem>
             ))}
-          </select>
-        </label>
-        <label>
-          Lux
+          </MDBDropdownMenu>
+        </MDBDropdown>
+        {data.marker_type === 'pju' && (
           <MDBInput
             label="Lux"
             type="number"
@@ -58,7 +62,7 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
             value={data.lux ?? ''}
             onChange={(event) => onUpdate(data.id, { lux: event.target.value === '' ? null : Number(event.target.value) })}
           />
-        </label>
+        )}
         <MDBCheckbox label="Sudah ditinjau" checked={!!data.done} onChange={(event) => onUpdate(data.id, { done: event.target.checked ? 1 : 0 })} />
         <div className="d-flex flex-wrap gap-2">
           {data.photo && (
@@ -89,22 +93,24 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
           )}
           <MDBBtn tag="label" color="light" size="sm">
             📷 Foto
-            <input type="file" className="d-none" accept="image/*" onChange={(event) => upload(event, 'photo', 2000, 0.4)} />
+            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo')} />
           </MDBBtn>
           <MDBBtn tag="label" color="light" size="sm">
             🌐 360°
-            <input type="file" className="d-none" accept="image/*" onChange={(event) => upload(event, 'photo_360', 4000, 0.5)} />
+            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo_360')} />
           </MDBBtn>
         </div>
-        <MDBBtn color="secondary" aria-label="Pindahkan marker" title="Pindahkan marker" onClick={() => onMove(data.id)}>
-          <i className="fas fa-arrows-up-down-left-right" />
-        </MDBBtn>
-        <MDBBtn color="info" aria-label="Menuju marker" title="Menuju marker" onClick={() => onLocate(data.id)}>
-          <i className="fas fa-location-arrow" />
-        </MDBBtn>
-        <MDBBtn color="danger" aria-label="Hapus marker dan semua foto" title="Hapus marker dan semua foto" onClick={() => onDelete(data.id)}>
-          <i className="fas fa-trash" />
-        </MDBBtn>
+        <MDBBtnGroup className="w-100">
+          <MDBBtn color="secondary" aria-label="Pindahkan marker" title="Pindahkan marker" onClick={() => onMove(data.id)}>
+            <i className="fas fa-arrows-up-down-left-right" />
+          </MDBBtn>
+          <MDBBtn color="info" aria-label="Menuju marker" title="Menuju marker" onClick={() => onLocate(data.id)}>
+            <i className="fas fa-location-arrow" />
+          </MDBBtn>
+          <MDBBtn color="danger" aria-label="Hapus marker dan semua foto" title="Hapus marker dan semua foto" onClick={() => onDelete(data.id)}>
+            <i className="fas fa-trash" />
+          </MDBBtn>
+        </MDBBtnGroup>
       </MDBCardBody>
     </MDBCard>
   )

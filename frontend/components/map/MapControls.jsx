@@ -1,4 +1,5 @@
 import {
+  MDBBtnGroup,
   MDBBadge,
   MDBBtn,
   MDBCard,
@@ -104,27 +105,31 @@ export default function MapControls({
             checked={showLabels}
             onChange={(event) => persist('distanceLabels', event.target.checked, setShowLabels)}
           />
-          <MDBBtn color="primary" size="sm" onClick={mark}>
-            <i className="fas fa-location-dot me-1" />
-            <span className="button-label">Mark</span>
-          </MDBBtn>
-          <MDBBtn color={measure ? 'warning' : 'warning'} size="sm" onClick={() => setMeasure(!measure)}>
-            <i className="fas fa-ruler me-1" />
-            <span className="button-label">Ukur</span>
-          </MDBBtn>
-          <MDBBtn color="secondary" size="sm" disabled>
-            <i className="fas fa-rotate-left me-1" />
-            <span className="button-label">Undo</span>
-          </MDBBtn>
-          <MDBBtn color="success" size="sm" onClick={exportCsv}>
-            <i className="fas fa-file-export me-1" />
-            <span className="button-label">Export</span>
-          </MDBBtn>
-          <MDBBtn tag="label" color="secondary" size="sm">
-            <i className="fas fa-file-import me-1" />
-            <span className="button-label">Import</span>
-            <input type="file" className="d-none" accept=".csv" onChange={importCsv} />
-          </MDBBtn>
+          <MDBBtnGroup>
+            <MDBBtn color="primary" onClick={mark} className="p-2">
+              <i className="fas fa-location-dot me-1" />
+              <span className="button-label">Mark</span>
+            </MDBBtn>
+            <MDBBtn color={measure ? 'warning' : 'warning'} onClick={() => setMeasure(!measure)} className="p-2">
+              <i className="fas fa-ruler me-1" />
+              <span className="button-label">Ukur</span>
+            </MDBBtn>
+            <MDBBtn color="secondary" size="sm" disabled className="p-2">
+              <i className="fas fa-rotate-left me-1" />
+              <span className="button-label">Undo</span>
+            </MDBBtn>
+          </MDBBtnGroup>
+          <MDBBtnGroup>
+            <MDBBtn color="success" onClick={exportCsv} className="p-2">
+              <i className="fas fa-file-export me-1" />
+              <span className="button-label">Export</span>
+            </MDBBtn>
+            <MDBBtn tag="label" color="secondary" className="p-2">
+              <i className="fas fa-file-import me-1" />
+              <span className="button-label">Import</span>
+              <input type="file" className="d-none" accept=".csv" onChange={importCsv} />
+            </MDBBtn>
+          </MDBBtnGroup>
         </MDBCardBody>
       </MDBCard>
     </>
