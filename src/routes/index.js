@@ -1,1 +1,1 @@
-export * as Marker from './marker.js'
+export * as Marker from './marker.routes.js'

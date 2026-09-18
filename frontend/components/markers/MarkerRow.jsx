@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CONDITIONS, MODES } from '../constants'
-import { ImageUtility } from '../util/services'
+import { CONDITIONS, MODES } from '../../constants'
+import { ImageUtility } from '../../util/services'
 import { MDBBtn, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
 
 export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer }) {

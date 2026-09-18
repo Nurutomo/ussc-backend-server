@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CONDITIONS, MODES } from '../constants'
-import { ImageUtility } from '../util/services'
+import { CONDITIONS, MODES } from '../../constants'
+import { ImageUtility } from '../../util/services'
 import { MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBInput } from 'mdb-react-ui-kit'
 
 export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocate, onClose, onViewer }) {

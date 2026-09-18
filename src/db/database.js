@@ -1,17 +1,18 @@
 import mysql from 'mysql2/promise'
 import fs from 'node:fs/promises'
+import { env } from '../config/env.js'
 
-const databaseUrl = process.env.DB_URL ? new URL(process.env.DB_URL) : null
-const databaseName = process.env.DB_NAME || databaseUrl?.pathname.replace(/^\//, '')
+const databaseUrl = env.db.url ? new URL(env.db.url) : null
+const databaseName = env.db.name || databaseUrl?.pathname.replace(/^\//, '')
 
-const connectionConfig = process.env.DB_URL
-  ? { uri: process.env.DB_URL }
+const connectionConfig = env.db.url
+  ? { uri: env.db.url }
   : {
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      port: parseInt(process.env.DB_PORT) || 3306,
-      database: process.env.DB_NAME,
+      host: env.db.host,
+      user: env.db.user,
+      password: env.db.password,
+      port: env.db.port,
+      database: env.db.name,
     }
 
 export const pool = mysql.createPool({
@@ -36,10 +37,10 @@ async function initializeDatabase() {
         password: decodeURIComponent(databaseUrl.password),
       }
     : {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        port: parseInt(process.env.DB_PORT) || 3306,
+        host: env.db.host,
+        user: env.db.user,
+        password: env.db.password,
+        port: env.db.port,
       }
   const connection = await mysql.createConnection(adminConfig)
 
@@ -61,7 +62,7 @@ async function initializeMarkerSchema() {
   )
 
   if (!tables.length) {
-    const initSql = await fs.readFile(new URL('../../INIT.sql', import.meta.url), 'utf8')
+    const initSql = await fs.readFile(new URL('../../database/init.sql', import.meta.url), 'utf8')
     await pool.query(initSql)
     return
   }

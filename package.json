@@ -11,18 +11,17 @@
     "url": "git+https://github.com/Nurutomo/ussc-backend-server.git"
   },
   "type": "module",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "build": "vite build && mv ./buildReact/index.html ./views/index.ejs",
+    "build": "vite build",
     "dev": "vite",
-    "start": "node index.js",
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.1",
     "bootstrap": "^5.3.8",
     "dotenv": "^17.4.2",
-    "ejs": "^6.0.1",
     "express": "^5.2.1",
     "jimp": "^1.6.1",
     "leaflet": "^1.9.4",

@@ -9,7 +9,7 @@ import {
   MDBDropdownMenu,
   MDBDropdownToggle,
 } from 'mdb-react-ui-kit'
-import { MODES } from '../constants'
+import { MODES } from '../../constants'
 
 export default function MapControls({
   mode,

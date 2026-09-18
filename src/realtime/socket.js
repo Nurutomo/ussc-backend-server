@@ -1,28 +1,8 @@
-import express from 'express'
 import { Server } from 'socket.io'
-import { Marker } from './routes/index.js'
-import morgan from 'morgan'
 
-export default function startServer(port = 3000) {
-  const app = express()
-
-  app.set('view engine', 'ejs')
-
-  // Increase JSON payload limit (e.g., to 10MB)
-  app.use(morgan('dev'))
-  app.use(express.json({ limit: '30mb' }))
-  app.use(express.static('buildReact'))
-  app.use(express.static('public'))
-
-  app.use('/marker', Marker.default)
-
-  app.get('/', (req, res) => {
-    res.render('index')
-  })
-
-  const server = app.listen(port, () => {
-    console.log(`Server is running on port ${port}`)
-  })
+// Wires up the live-location and marker-broadcast events on top of an
+// existing HTTP server. Returns the socket.io server instance.
+export function attachSocket(server) {
   const io = new Server(server)
   const liveLocations = new Map()
 
@@ -65,5 +45,5 @@ export default function startServer(port = 3000) {
     })
   })
 
-  return { app, server, io }
+  return io
 }
