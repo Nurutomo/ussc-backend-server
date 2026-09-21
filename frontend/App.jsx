@@ -112,7 +112,7 @@ export default function App() {
 
   useEffect(() => {
     const map = L.map(mapElement.current, { zoomControl: false, maxZoom: 24 }).setView([-7.301062, 112.670743], 17)
-    L.control.zoom({ position: 'bottomright' }).addTo(map)
+    L.control.zoom({ position: 'topright' }).addTo(map)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       referrerPolicy: 'strict-origin-when-cross-origin',
       maxZoom: 24,
@@ -151,6 +151,17 @@ export default function App() {
     mapRef.current.on('click', handleMapClick)
     return () => mapRef.current?.off('click', handleMapClick)
   }, [placement, markers, mode, currentLux])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return undefined
+    const handleMapDrag = () => {
+      setAutoCenter(false)
+      localStorage.setItem('autoCenterGps', false)
+    }
+    map.on('dragstart', handleMapDrag)
+    return () => map.off('dragstart', handleMapDrag)
+  }, [mapInstance])
 
   useEffect(() => {
     api
@@ -272,6 +283,11 @@ export default function App() {
   }, [])
 
   const mark = () => (currentPosition ? addMarker(currentPosition) : setPlacement({ kind: 'create' }))
+  const recenter = () => {
+    setAutoCenter(true)
+    localStorage.setItem('autoCenterGps', true)
+    if (currentPosition) mapRef.current?.flyTo(currentPosition, 18)
+  }
   const importCsv = (event) => {
     const file = event.target.files[0]
     if (!file) return
@@ -332,6 +348,7 @@ export default function App() {
           currentLux={currentLux}
           currentPosition={currentPosition}
           mapRef={mapRef}
+          onRecenter={recenter}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           measure={measure}

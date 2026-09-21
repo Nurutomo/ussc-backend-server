@@ -286,6 +286,14 @@ td button {
   backdrop-filter: blur(16px);
 }
 
+.map-action-buttons {
+  right: max(8px, env(safe-area-inset-right));
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  gap: 8px;
+  align-items: flex-end;
+  max-width: calc(100vw - 16px);
+}
+
 .map-controls .card-body {
   padding: 10px 12px max(10px, env(safe-area-inset-bottom));
 }
@@ -476,6 +484,11 @@ td button {
   .map-controls {
     width: 100%;
     border-radius: 14px 14px 0 0;
+  }
+
+  .map-action-buttons {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(6rem + env(safe-area-inset-bottom));
   }
 
   .pill,

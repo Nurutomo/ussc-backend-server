@@ -22,6 +22,7 @@ export default function MapControls({
   currentLux,
   currentPosition,
   mapRef,
+  onRecenter,
   sidebarOpen,
   setSidebarOpen,
   measure,
@@ -34,6 +35,8 @@ export default function MapControls({
     setter(value)
     localStorage.setItem(key, value)
   }
+
+  const enterFullscreen = () => document.querySelector('body')?.requestFullscreen?.()
 
   return (
     <>
@@ -48,17 +51,73 @@ export default function MapControls({
       >
         <i className="fas fa-bars" />
       </MDBBtn>
-      <MDBBtn
-        color="success"
-        className="position-absolute top-0 end-0 m-3 animation fade-in p-2"
-        style={{ zIndex: 1000, transition: 'transform .2s ease, box-shadow .2s ease' }}
-        onClick={() => currentPosition && mapRef.current.flyTo(currentPosition, 18)}
-        aria-label="Kembali ke lokasi"
-        title="Kembali ke lokasi"
-        size="sm"
-      >
-        <i className="fas fa-location-crosshairs" />
-      </MDBBtn>
+      <div className="position-absolute d-flex bottom-0 end-0 flex-column m-2 animation fade-in" style={{ zIndex: 1000 }}>
+        <MDBBtn
+          floating
+          rounded
+          color="dark"
+          className="bottom-0 end-0 m-1 animation fade-in"
+          style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
+          size="lg"
+          onClick={enterFullscreen}
+          aria-label="Tela cheia"
+          title="Tela cheia"
+        >
+          <i className="fas fa-expand" />
+        </MDBBtn>
+        <MDBBtn
+          floating
+          rounded
+          color="info"
+          className="bottom-0 end-0 m-1 animation fade-in"
+          style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
+          size="lg"
+          disabled
+          aria-label="Undo"
+          title="Undo"
+        >
+          <i className="fas fa-rotate-left" />
+        </MDBBtn>
+        <MDBBtn
+          floating
+          rounded
+          color="primary"
+          className="bottom-0 end-0 m-1 animation fade-in"
+          style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
+          onClick={mark}
+          size="lg"
+          aria-label="Mark lokasi"
+          title="Mark lokasi"
+        >
+          <i className="fas fa-location-dot" />
+        </MDBBtn>
+        <MDBBtn
+          floating
+          rounded
+          color="warning"
+          className="bottom-0 end-0 m-1 animation fade-in"
+          style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
+          size="lg"
+          onClick={() => setMeasure(!measure)}
+          aria-label="Ukur jarak"
+          title="Ukur jarak"
+        >
+          <i className="fas fa-ruler" />
+        </MDBBtn>
+        <MDBBtn
+          floating
+          rounded
+          color="success"
+          className="bottom-0 end-0 m-1 animation fade-in"
+          style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
+          onClick={onRecenter}
+          aria-label="Kembali ke lokasi"
+          title="Kembali ke lokasi"
+          size="lg"
+        >
+          <i className="fas fa-location-crosshairs" />
+        </MDBBtn>
+      </div>
       <MDBBadge
         color="light"
         className="position-absolute top-0 start-50 translate-middle-x mt-3 px-3 py-2 text-dark shadow-sm animation fade-in"
@@ -94,31 +153,11 @@ export default function MapControls({
       >
         <MDBCardBody className="p-2 d-flex flex-wrap gap-2 align-items-center justify-content-center">
           <MDBCheckbox
-            id="auto-center"
-            label="GPS"
-            checked={autoCenter}
-            onChange={(event) => persist('autoCenterGps', event.target.checked, setAutoCenter)}
-          />
-          <MDBCheckbox
             id="show-labels"
             label="Label"
             checked={showLabels}
             onChange={(event) => persist('distanceLabels', event.target.checked, setShowLabels)}
           />
-          <MDBBtnGroup>
-            <MDBBtn color="primary" onClick={mark} className="p-2">
-              <i className="fas fa-location-dot me-1" />
-              <span className="button-label">Mark</span>
-            </MDBBtn>
-            <MDBBtn color={measure ? 'warning' : 'warning'} onClick={() => setMeasure(!measure)} className="p-2">
-              <i className="fas fa-ruler me-1" />
-              <span className="button-label">Ukur</span>
-            </MDBBtn>
-            <MDBBtn color="secondary" size="sm" disabled className="p-2">
-              <i className="fas fa-rotate-left me-1" />
-              <span className="button-label">Undo</span>
-            </MDBBtn>
-          </MDBBtnGroup>
           <MDBBtnGroup>
             <MDBBtn color="success" onClick={exportCsv} className="p-2">
               <i className="fas fa-file-export me-1" />
