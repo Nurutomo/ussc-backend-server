@@ -30,13 +30,14 @@ export default function MapControls({
   mark,
   exportCsv,
   importCsv,
+  isFullscreen,
+  toggleFullscreen,
 }) {
   const persist = (key, value, setter) => {
     setter(value)
     localStorage.setItem(key, value)
   }
 
-  const enterFullscreen = () => document.querySelector('body')?.requestFullscreen?.()
 
   return (
     <>
@@ -59,11 +60,11 @@ export default function MapControls({
           className="bottom-0 end-0 m-1 animation fade-in"
           style={{ transition: 'transform .2s ease, box-shadow .2s ease' }}
           size="lg"
-          onClick={enterFullscreen}
-          aria-label="Tela cheia"
-          title="Tela cheia"
+          onClick={toggleFullscreen}
+          aria-label="Fullscreen"
+          title="Fullscreen"
         >
-          <i className="fas fa-expand" />
+          <i className={`fas ${isFullscreen ? 'fa-compress' : 'fa-expand'}`} />
         </MDBBtn>
         <MDBBtn
           floating
