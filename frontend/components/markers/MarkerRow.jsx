@@ -16,6 +16,9 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
   return (
     <tr className="animation fade-in" style={{ animationDelay: `${index * 70}ms` }}>
       <td>
+        <MDBCheckbox checked={!!data.done} onChange={(event) => onUpdate(data.id, { done: event.target.checked ? 1 : 0 })} />
+      </td>
+      <td>
         <strong>#{data.id}</strong>
         <MDBInput
           size="sm"
@@ -73,7 +76,7 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
           ))}
         </select>
       </td>
-      {data.marker_type === 'pju' && (
+      {MODES.find((mode) => mode.value === data.marker_type)?.lux && (
         <td>
           <MDBInput
             size="sm"
@@ -84,9 +87,6 @@ export default function MarkerRow({ data, index, onUpdate, onDelete, onMove, onL
             onChange={(event) => onUpdate(data.id, { lux: event.target.value === '' ? null : Number(event.target.value) })}
           />
         </td>)}
-      <td>
-        <MDBCheckbox checked={!!data.done} onChange={(event) => onUpdate(data.id, { done: event.target.checked ? 1 : 0 })} />
-      </td>
       <td>
         <MDBBtn className="p-2" size="sm" color="primary" aria-label="Lihat marker" title="Lihat marker" onClick={() => onSelect(data.id)}>
           <i className="fas fa-eye" />

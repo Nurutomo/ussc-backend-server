@@ -1,8 +1,9 @@
 export const MODES = [
-  { value: 'pju', label: 'Planning PJU marker' },
-  { value: 'kwh', label: 'kWH Meter marker' },
-  { value: 'indoor', label: 'Indoor Lights and Power Plug' },
-  { value: 'tree', label: 'Tree and Vegetation' },
+  { value: 'pju', label: 'PJU Hutan', lux: true },
+  { value: 'kwh', label: 'kWH Meter' },
+  { value: 'indoor', label: 'Titik Lampu Indoor' },
+  { value: 'tree', label: 'Tanaman Hutan' },
+  { value: 'pju_luar', label: 'PJU Luar', lux: true },
 ]
 
 export const CONDITIONS = ['Gelap', 'Redup', 'Terang']

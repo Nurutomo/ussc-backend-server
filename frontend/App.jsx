@@ -209,7 +209,7 @@ export default function App() {
       const popupImage = data.photo
         ? `<img src="${data.photo}" alt="${data.name || 'Marker image'}" style="width:120px;height:80px;display:block;object-fit:cover;border-radius:6px;margin:0 auto 6px">`
         : ''
-      const marker = L.marker(point, { icon: markerIcon(data.condition, data.done) })
+      const marker = L.marker(point, { icon: markerIcon(data) })
         .bindTooltip(distance(currentPosition, point), { permanent: showLabels, direction: 'top', className: 'distance-tooltip', offset: [0, -15] })
         .bindPopup(
           `<div style="min-width:150px;text-align:center"><strong>#${data.id}</strong><div style="font-weight:600;margin:4px 0 6px">${data.name || ''}</div>${popupImage}<div>${Number(data.latitude).toFixed(6)}, ${Number(data.longitude).toFixed(6)}</div></div>`

@@ -1,8 +1,20 @@
 import L from 'leaflet'
 import { COLORS } from '../constants'
 
-export function markerIcon(condition, done) {
-  const [fill, border] = COLORS[condition] || COLORS.Terang
+export function getColorByLux(lux) {
+  const minLux = 0
+  const maxLux = 500
+  const startHue = 0 // Red
+  const endHue = 120 // Green
+  const normalizedLux = Math.max(0, Math.min(maxLux, lux))
+  const normalizedValue = Math.max(0, Math.pow(normalizedLux - minLux, 1.2) / Math.pow(maxLux - minLux, 1.2))
+  const hue = startHue + (endHue - startHue) * normalizedValue
+  const lightness = 45 + (normalizedValue * 20) // Adjust lightness based on lux
+  return [`hsl(${hue}, 100%, ${lightness}%)`, `hsl(${hue}, 100%, ${lightness - 20}%)`] // Return fill and border colors
+}
+
+export function markerIcon({ condition, done, lux, marker_type }) {
+  const [fill, border] = marker_type === 'pju_luar' ? getColorByLux(lux) : COLORS[condition] || COLORS.Terang
   const check = done
     ? '<circle cx="18" cy="6" r="5" fill="#16a34a" stroke="#fff"/><path d="M15.7 6l1.4 1.4L20.3 4" stroke="#fff" fill="none" stroke-linecap="round"/>'
     : ''

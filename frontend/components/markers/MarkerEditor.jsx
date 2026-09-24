@@ -54,7 +54,7 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
             ))}
           </MDBDropdownMenu>
         </MDBDropdown>
-        {data.marker_type === 'pju' && (
+        {MODES.find((mode) => mode.value === data.marker_type)?.lux && (
           <MDBInput
             label="Lux"
             type="number"

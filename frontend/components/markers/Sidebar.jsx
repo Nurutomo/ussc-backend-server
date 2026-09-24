@@ -1,5 +1,6 @@
 import { MDBBadge, MDBBtn, MDBInput, MDBTable, MDBTableBody, MDBTableHead } from 'mdb-react-ui-kit'
 import MarkerRow from './MarkerRow'
+import { MODES } from '../../constants'
 
 export default function Sidebar({ open, mobile, connected, markers, searchTerm, onSearch, onUpdate, onDelete, onMove, onLocate, onSelect, onViewer, onClose }) {
   return (
@@ -67,11 +68,11 @@ export default function Sidebar({ open, mobile, connected, markers, searchTerm, 
           <MDBTable small hover className="mb-0 align-middle" style={{ minWidth: '760px' }}>
             <MDBTableHead light>
               <tr>
+                <th>✅</th>
                 <th>ID</th>
                 <th>Foto</th>
                 <th>Kondisi</th>
-                {markers[0]?.marker_type === 'pju' && <th>Lux</th>}
-                <th>Selesai</th>
+                {MODES.find((mode) => mode.value === markers[0]?.mode)?.lux && <th>Lux</th>}
                 <th>Aksi</th>
               </tr>
             </MDBTableHead>
