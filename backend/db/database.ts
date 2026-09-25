@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise'
+import type { RowDataPacket } from 'mysql2'
 import fs from 'node:fs/promises'
 import { env } from '../config/env.js'
 
@@ -54,7 +55,7 @@ async function initializeDatabase() {
 async function initializeMarkerSchema() {
   await initializeDatabase()
 
-  const [tables] = await pool.query(
+  const [tables] = await pool.query<RowDataPacket[]>(
     `SELECT 1
      FROM information_schema.tables
      WHERE table_schema = DATABASE() AND table_name = 'marker'
@@ -67,7 +68,7 @@ async function initializeMarkerSchema() {
     return
   }
 
-  const [columns] = await pool.query(
+  const [columns] = await pool.query<RowDataPacket[]>(
     `SELECT COLUMN_NAME, EXTRA
      FROM information_schema.columns
      WHERE table_schema = DATABASE() AND table_name = 'marker'
@@ -76,7 +77,7 @@ async function initializeMarkerSchema() {
   const idColumn = columns.find((column) => column.COLUMN_NAME === 'id')
 
   if (idColumn && !idColumn.EXTRA.includes('auto_increment')) {
-    const [primaryKeys] = await pool.query(
+    const [primaryKeys] = await pool.query<RowDataPacket[]>(
       `SELECT 1
        FROM information_schema.table_constraints
        WHERE table_schema = DATABASE() AND table_name = 'marker' AND constraint_type = 'PRIMARY KEY'

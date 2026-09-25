@@ -10,7 +10,7 @@ import {
   MDBDropdownMenu,
   MDBDropdownToggle,
 } from 'mdb-react-ui-kit'
-import { MODES } from '../../constants'
+import { MODES_FORMAT } from '../../constants'
 
 export default function MapControls({
   mode,
@@ -130,19 +130,19 @@ export default function MapControls({
       <div className="position-absolute top-0 start-50 translate-middle-x mt-5 pt-2 animation fade-in" style={{ zIndex: 1000 }}>
         <MDBDropdown>
           <MDBDropdownToggle color="success" size="sm" aria-label="Pilih mode marker" title="Pilih mode marker">
-            {MODES.find((item) => item.value === mode)?.label || mode}
+            {MODES_FORMAT[mode]?.label || mode}
           </MDBDropdownToggle>
           <MDBDropdownMenu>
-            {MODES.map((item) => (
+            {Object.entries(MODES_FORMAT).map(([value, { label }]) => (
               <MDBDropdownItem
-                key={item.value}
+                key={value}
                 link
                 onClick={() => {
-                  setMode(item.value)
-                  localStorage.setItem('activeMarkerType', item.value)
+                  setMode(value)
+                  localStorage.setItem('activeMarkerType', value)
                 }}
               >
-                {item.label}
+                {label}
               </MDBDropdownItem>
             ))}
           </MDBDropdownMenu>

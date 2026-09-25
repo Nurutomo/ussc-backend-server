@@ -9,34 +9,34 @@ per marker, and live GPS broadcasting between connected clients).
 ```
 database/
   init.sql              # schema, applied automatically on first run
-src/
-  index.js              # entrypoint: builds the app, starts HTTP + socket.io
-  app.js                # Express app: middleware, static files, routes
+backend/
+  index.ts              # entrypoint: builds the app, starts HTTP + socket.io
+  app.ts                # Express app: middleware, static files, routes
   config/
-    env.js              # single place that reads process.env
+    env.ts              # single place that reads process.env
   db/
-    database.js         # mysql pool + first-run schema bootstrap
+    database.ts         # mysql pool + first-run schema bootstrap
   realtime/
-    socket.js           # socket.io events (live location, marker broadcasts)
+    socket.ts           # socket.io events (live location, marker broadcasts)
   routes/
-    index.js            # route barrel
-    marker.routes.js     # /marker CRUD endpoints
+    index.ts            # route barrel
+    marker.routes.ts     # /marker CRUD endpoints
   services/
-    image-storage.service.js  # saving/removing marker photos on disk
+    image-storage.service.ts  # saving/removing marker photos on disk
   lib/
-    panorama-splitter.js # equirectangular -> multires cubemap tiles (pannellum)
+    panorama-splitter.ts # equirectangular -> multires cubemap tiles (pannellum)
 frontend/                # Vite + React app
-  App.jsx
-  constants.js
+  App.tsx
+  constants.ts
   components/
     map/                # map controls, feedback banner, measuring tool
     markers/            # marker list/editor/sidebar
     viewer/             # photo / 360 photo viewers
   util/
-    format.js           # marker icon, date, distance helpers
-    services.js          # REST client + socket client + image compression
+    format.ts           # marker icon, date, distance helpers
+    services.ts         # REST client + socket client + image compression
 public/                  # gitignored; created at runtime for uploaded photos
-buildReact/               # gitignored; vite build output, served at "/"
+frontend/build/           # gitignored; vite build output, served at "/"
 ```
 
 ## Setup
@@ -53,8 +53,8 @@ The `marker` table and database are created automatically on first boot from
 
 ```bash
 npm run dev     # Vite dev server for the frontend (frontend/)
-npm start       # Express + socket.io API server (src/index.js)
-npm run build   # Builds the frontend into buildReact/, served by the API server at "/"
+npm start       # Express + socket.io API server (backend/dist/index.js)
+npm run build   # Builds the frontend into frontend/build/, served by the API server at "/"
 ```
 
 For local development you'll typically run the API server (`npm start`) and
@@ -63,17 +63,17 @@ let the Express server serve the built frontend directly.
 
 ## Notes on this structure
 
-- `src/index.js` is the only entrypoint; `src/app.js` builds the Express app
-  and `src/realtime/socket.js` wires up socket.io — kept apart so each stays
+- `backend/index.ts` is the only entrypoint; `backend/app.ts` builds the Express app
+  and `backend/realtime/socket.ts` wires up socket.io — kept apart so each stays
   readable and testable in isolation.
-- Environment variables are only read in `src/config/env.js`; everything
+- Environment variables are only read in `backend/config/env.ts`; everything
   else imports `env` from there instead of touching `process.env` directly.
 - Image read/write for marker photos lives in
-  `src/services/image-storage.service.js`, separate from the HTTP route
-  handlers in `src/routes/marker.routes.js`.
+  `backend/services/image-storage.service.ts`, separate from the HTTP route
+  handlers in `backend/routes/marker.routes.ts`.
 - There used to be a `views/index.ejs` file and an `ejs` dependency, but it
   was just a copy of the Vite build's `index.html` that the old `build`
-  script overwrote on every build (`mv ./buildReact/index.html
-  ./views/index.ejs`) — since `express.static('buildReact')` already serves
+  script overwrote on every build (`mv ./frontend/build/index.html
+  ./views/index.ejs`) — since `express.static('frontend/build')` already serves
   that same `index.html` at `/`, the EJS render was dead code. Both were
   removed in this restructuring.

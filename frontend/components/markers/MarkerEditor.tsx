@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { CONDITIONS, MODES } from '../../constants'
+import { CONDITIONS, MODES_FORMAT } from '../../constants'
 import { uploadEvent } from '../../util/services'
 import { MDBBtnGroup, MDBBtn, MDBCard, MDBCardBody, MDBCheckbox, MDBDropdown, MDBDropdownMenu, MDBDropdownToggle, MDBDropdownItem, MDBInput } from 'mdb-react-ui-kit'
 
 export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocate, onClose, onViewer }) {
   const [name, setName] = useState(data.name || '')
+  const [lux, setLux] = useState(data.lux || 0)
   const photo360Preview = data.photo_360?.endsWith('/config.json') ? data.photo_360.replace(/\/config\.json$/, '/fallback/f.jpg') : data.photo_360
   useEffect(() => setName(data.name || ''), [data.id, data.name])
+  useEffect(() => setLux(data.lux || 0), [data.id, data.lux])
 
   return (
     <MDBCard
@@ -21,19 +23,19 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
         <MDBInput label="Nama" value={name} onChange={(event) => setName(event.target.value)} onBlur={() => onUpdate(data.id, { name })} />
         <MDBDropdown>
           <MDBDropdownToggle color="light" size="sm" className="w-100 text-start">
-            {MODES.find((item) => item.value === (data.marker_type || 'pju'))?.label || 'PJU'}
+            {MODES_FORMAT[(data.marker_type || 'pju')]?.label || 'PJU'}
           </MDBDropdownToggle>
           <MDBDropdownMenu>
-            {MODES.map((item) => (
+            {Object.entries(MODES_FORMAT).map(([name, format]) => (
               <MDBDropdownItem
-                key={item.value}
+                key={name}
                 link
                 onClick={() => {
-                  onUpdate(data.id, { marker_type: item.value })
-                  localStorage.setItem('activeMarkerType', item.value)
+                  onUpdate(data.id, { marker_type: name })
+                  localStorage.setItem('activeMarkerType', name)
                 }}
               >
-                {item.label}
+                {format.label}
               </MDBDropdownItem>
             ))}
           </MDBDropdownMenu>
@@ -43,7 +45,7 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
             {data.condition || 'Terang'}
           </MDBDropdownToggle>
           <MDBDropdownMenu>
-            {CONDITIONS.map((value) => (
+            {Object.values(CONDITIONS).map((value) => (
               <MDBDropdownItem
                 key={value}
                 link
@@ -54,13 +56,14 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
             ))}
           </MDBDropdownMenu>
         </MDBDropdown>
-        {MODES.find((mode) => mode.value === data.marker_type)?.lux && (
+        {MODES_FORMAT[data.marker_type]?.lux && (
           <MDBInput
             label="Lux"
             type="number"
             step=".1"
-            value={data.lux ?? ''}
-            onChange={(event) => onUpdate(data.id, { lux: event.target.value === '' ? null : Number(event.target.value) })}
+            value={lux ?? ''}
+            onChange={(event) => setLux(Number(event.target.value))}
+            onBlur={(event) => onUpdate(data.id, { lux: Number(event.target.value) })}
           />
         )}
         <MDBCheckbox label="Sudah ditinjau" checked={!!data.done} onChange={(event) => onUpdate(data.id, { done: event.target.checked ? 1 : 0 })} />
@@ -93,11 +96,11 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
           )}
           <MDBBtn tag="label" color="light" size="sm">
             📷 Foto
-            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo')} />
+            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo', data.id, onUpdate)} />
           </MDBBtn>
           <MDBBtn tag="label" color="light" size="sm">
             🌐 360°
-            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo_360')} />
+            <input type="file" className="d-none" accept="image/*" onChange={(event) => uploadEvent(event, 'photo_360', data.id, onUpdate)} />
           </MDBBtn>
         </div>
         <MDBBtnGroup className="w-100">
@@ -109,6 +112,9 @@ export default function MarkerEditor({ data, onUpdate, onDelete, onMove, onLocat
           </MDBBtn>
           <MDBBtn color="danger" aria-label="Hapus marker dan semua foto" title="Hapus marker dan semua foto" onClick={() => onDelete(data.id)}>
             <i className="fas fa-trash" />
+          </MDBBtn>
+          <MDBBtn color="success" aria-label="Lihat QR Code" title="Lihat QR Code" onClick={() => onViewer(data.id, 'qr')}>
+            <i className="fas fa-qrcode" />
           </MDBBtn>
         </MDBBtnGroup>
       </MDBCardBody>

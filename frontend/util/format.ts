@@ -7,7 +7,7 @@ export function getColorByLux(lux) {
   const startHue = 0 // Red
   const endHue = 120 // Green
   const normalizedLux = Math.max(0, Math.min(maxLux, lux))
-  const normalizedValue = Math.max(0, Math.pow(normalizedLux - minLux, 1.2) / Math.pow(maxLux - minLux, 1.2))
+  const normalizedValue = Math.max(0, Math.log10(normalizedLux - minLux) / Math.log10(maxLux - minLux))
   const hue = startHue + (endHue - startHue) * normalizedValue
   const lightness = 45 + (normalizedValue * 20) // Adjust lightness based on lux
   return [`hsl(${hue}, 100%, ${lightness}%)`, `hsl(${hue}, 100%, ${lightness - 20}%)`] // Return fill and border colors

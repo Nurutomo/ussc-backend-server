@@ -291,7 +291,9 @@ export async function process(img, options = {}) {
 
           if (!partialPano || !isUniformColor(tile, bgColorInt)) {
             const tileOutPath = path.join(levelDir, `${faceLetters[f]}${i}_${j}${extension}`)
-            await tile.write(tileOutPath, opts.png ? undefined : { quality: opts.quality })
+            const outputPath = tileOutPath as `${string}.${string}`
+            if (opts.png) await tile.write(outputPath)
+            else await tile.write(outputPath, { quality: opts.quality } as never)
           } else {
             missingTiles.push([f, level, j, i])
           }
@@ -340,7 +342,7 @@ export async function process(img, options = {}) {
     equiPreview = 'data:image/jpeg;base64,' + buffer.toString('base64')
   }
 
-  const config = { hfov: opts.hfov }
+  const config: Record<string, unknown> = { hfov: opts.hfov }
 
   if (haov < 360) {
     config.haov = haov

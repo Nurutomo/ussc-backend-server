@@ -1,10 +1,11 @@
 import { Server } from 'socket.io'
+import http from 'http'
 
 // Wires up the live-location and marker-broadcast events on top of an
 // existing HTTP server. Returns the socket.io server instance.
-export function attachSocket(server) {
+export function attachSocket(server: http.Server): Server {
   const io = new Server(server)
-  const liveLocations = new Map()
+  const liveLocations = new Map<string, any>()
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`)

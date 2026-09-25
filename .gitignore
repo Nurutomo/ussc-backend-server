@@ -2,4 +2,5 @@
 .env
 node_modules
 public/img
-buildReact
+frontend/build
+backend/dist

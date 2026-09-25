@@ -11,11 +11,13 @@
     "url": "git+https://github.com/Nurutomo/ussc-backend-server.git"
   },
   "type": "module",
-  "main": "src/index.js",
+  "main": "backend/dist/index.js",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "start": "node src/index.js",
+    "build": "vite build && tsc -p tsconfig.backend.json",
+    "dev": "vite --host",
+    "dev:all": "concurrently \"npm run start:dev\" \"npm run dev\"",
+    "start": "node backend/dist/index.js",
+    "start:dev": "tsx watch backend/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -35,9 +37,18 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/leaflet": "^1.9.22",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^9.2.1",
     "sass": "^1.104.1",
     "sass-embedded": "^1.104.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }
 }
